@@ -2,12 +2,34 @@ import React from 'react';
 import { Search, Music } from 'lucide-react';
 import TrackItem from '../components/TrackItem';
 
+
 const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, likedTracks, searchQuery, setSearchQuery }) => {
   const filteredTracks = tracks.filter(track => 
     track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     track.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
     track.album.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  console.log("GO CHERCHER");
+  
+
+
+
+  React.useEffect(() => {
+    const testFetch = async () => {
+      try {
+        console.log("GO CHERCHER");
+        const response = await fetch("http://localhost:4444/search/prout");
+        const data = await response.json(); // Parse JSON response
+        console.log("Fetched data:", data);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      }
+    };
+    
+    testFetch();
+  }, []);
+
 
   const genres = [
     { name: 'Pop', colors: ['#e13300', '#dc148c'] },

@@ -13,21 +13,37 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "electron:dev": "npm run build && python -m PyInstaller --onefile .\\backend\\app.py --distpath .\\backend\\ && npm start",
+    "electron:build": "npm run build && python -m PyInstaller --onefile .\\backend\\app.py --distpath .\\backend\\ && electron-builder",
     "start": "electron .",
     "dist": "electron-builder",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -r https://github.com/Thegeekeuhhhhhhh/spotifree.git"
   },
   "build": {
-    "appId": "com.myapp.desktop",
+    "appId": "com.spotifree.desktop",
+    "productName": "Spotifree",
     "asar": true,
     "files": [
       "main.js",
-      "backend/app.exe",
-      "frontend/**/*"
+      "dist/index.html",
+      "dist/assets/*",
+      "backend/*"
     ],
+    "directories": {
+      "output": "release"
+    },
     "win": {
-      "target": "nsis"
+      "target": ["nsis", "portable"],
+      "icon": "icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.icns"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "icon.png"
     }
   },
   "dependencies": {
