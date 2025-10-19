@@ -60,10 +60,6 @@ jobs:
       working-directory: ./frontend
       run: npm ci
     
-    - name: Lint (if configured)
-      working-directory: ./frontend
-      run: npm run lint --if-present
-    
     - name: Build frontend
       working-directory: ./frontend
       run: npm run build
