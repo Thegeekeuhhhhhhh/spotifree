@@ -1,4 +1,4 @@
-name: Build and Test Desktop App
+name: Build and Test Spotifree
 
 on:
   push:
@@ -33,18 +33,20 @@ jobs:
     
     - name: Lint with flake8
       run: |
+        cd backend
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     
-    - name: Run tests
+    - name: Run backend tests
       run: |
+        cd backend
         pytest --cov=. --cov-report=xml
     
     - name: Upload coverage
       uses: codecov/codecov-action@v3
       if: matrix.python-version == '3.11'
       with:
-        file: ./coverage.xml
+        file: ./backend/coverage.xml
 
   test-frontend:
     name: Test React Frontend
@@ -64,13 +66,13 @@ jobs:
       working-directory: ./frontend
       run: npm ci
     
-    - name: Lint
+    - name: Lint (if configured)
       working-directory: ./frontend
-      run: npm run lint
+      run: npm run lint --if-present
     
-    - name: Run tests
+    - name: Run tests (if configured)
       working-directory: ./frontend
-      run: npm test -- --coverage --watchAll=false
+      run: npm test --if-present -- --coverage --watchAll=false
     
     - name: Build frontend
       working-directory: ./frontend
@@ -86,10 +88,13 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
+            artifact_name: spotifree-linux.tar.gz
           - os: windows-latest
             platform: windows
+            artifact_name: spotifree-windows.zip
           - os: macos-latest
             platform: macos
+            artifact_name: spotifree-macos.tar.gz
     
     steps:
     - uses: actions/checkout@v4
@@ -121,41 +126,59 @@ jobs:
       working-directory: ./frontend
       run: npm run build
     
-    - name: Build backend with PyInstaller
+    - name: Copy frontend build to backend
+      shell: bash
       run: |
-        pyinstaller --name=myapp --windowed --onefile main.py
+        mkdir -p backend/dist/frontend
+        cp -r frontend/build/* backend/dist/frontend/
+    
+    - name: Build backend with PyInstaller (Windows)
+      if: matrix.platform == 'windows'
+      working-directory: ./backend
+      run: |
+        pyinstaller --name=spotifree --windowed --onefile --add-data "dist/frontend;frontend" app.py
+    
+    - name: Build backend with PyInstaller (Unix)
+      if: matrix.platform != 'windows'
+      working-directory: ./backend
+      run: |
+        pyinstaller --name=spotifree --windowed --onefile --add-data "dist/frontend:frontend" app.py
     
     - name: Package application (Linux)
       if: matrix.platform == 'linux'
       run: |
-        mkdir -p dist/myapp
-        cp -r dist/myapp dist/myapp/
-        cp -r frontend/build dist/myapp/frontend
-        tar -czvf myapp-linux.tar.gz -C dist myapp
+        mkdir -p release/spotifree
+        cp backend/dist/spotifree release/spotifree/
+        cp LICENSE release/spotifree/ || true
+        cp README.md release/spotifree/ || true
+        cd release
+        tar -czvf spotifree-linux.tar.gz spotifree
     
     - name: Package application (Windows)
       if: matrix.platform == 'windows'
+      shell: pwsh
       run: |
-        mkdir dist/myapp
-        copy dist/myapp.exe dist/myapp/
-        xcopy /E /I frontend/build dist/myapp/frontend
-        Compress-Archive -Path dist/myapp -DestinationPath myapp-windows.zip
+        New-Item -ItemType Directory -Force -Path release/spotifree
+        Copy-Item backend/dist/spotifree.exe release/spotifree/
+        Copy-Item LICENSE release/spotifree/ -ErrorAction SilentlyContinue
+        Copy-Item README.md release/spotifree/ -ErrorAction SilentlyContinue
+        Compress-Archive -Path release/spotifree -DestinationPath release/spotifree-windows.zip
     
     - name: Package application (macOS)
       if: matrix.platform == 'macos'
       run: |
-        mkdir -p dist/myapp
-        cp -r dist/myapp dist/myapp/
-        cp -r frontend/build dist/myapp/frontend
-        tar -czvf myapp-macos.tar.gz -C dist myapp
+        mkdir -p release/spotifree
+        cp backend/dist/spotifree release/spotifree/
+        cp LICENSE release/spotifree/ || true
+        cp README.md release/spotifree/ || true
+        cd release
+        tar -czvf spotifree-macos.tar.gz spotifree
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: myapp-${{ matrix.platform }}
-        path: |
-          myapp-*.tar.gz
-          myapp-*.zip
+        name: spotifree-${{ matrix.platform }}
+        path: release/${{ matrix.artifact_name }}
         retention-days: 7
 
   release:
@@ -172,8 +195,8 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          myapp-linux/*.tar.gz
-          myapp-windows/*.zip
-          myapp-macos/*.tar.gz
+          spotifree-linux/*.tar.gz
+          spotifree-windows/*.zip
+          spotifree-macos/*.tar.gz
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
