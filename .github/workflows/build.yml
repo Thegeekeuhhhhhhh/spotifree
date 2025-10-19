@@ -136,7 +136,7 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: package-lock.json
+        cache-dependency-path: frontend/package-lock.json
     
     - name: Install Python dependencies
       run: |
@@ -145,10 +145,19 @@ jobs:
         pip install pyinstaller
     
     - name: Install and build frontend
-      working-directory: ./frontend
       run: |
+        cd frontend
         npm ci
         npm run build
+        cd ..
+    
+    - name: Verify frontend build exists
+      run: |
+        if (-Not (Test-Path "frontend/build")) {
+          Write-Error "Error: frontend/build directory not found"
+          exit 1
+        }
+        Get-ChildItem frontend/build
     
     - name: Build Windows executable
       run: |
@@ -196,7 +205,7 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: package-lock.json
+        cache-dependency-path: frontend/package-lock.json
     
     - name: Install Python dependencies
       run: |
@@ -205,10 +214,20 @@ jobs:
         pip install pyinstaller
     
     - name: Install and build frontend
-      working-directory: ./frontend
       run: |
+        cd frontend
         npm ci
         npm run build
+        cd ..
+    
+    - name: Verify frontend build exists
+      run: |
+        ls -la frontend/
+        if [ ! -d "frontend/build" ]; then
+          echo "Error: frontend/build directory not found"
+          exit 1
+        fi
+        ls -la frontend/build/
     
     - name: Build Linux executable
       run: |
