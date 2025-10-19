@@ -53,21 +53,18 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: package-lock.json
     
     - name: Install dependencies
-      working-directory: ./frontend
       run: npm ci
     
     - name: Build frontend
-      working-directory: ./frontend
       run: npm run build
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: frontend-build
-        path: frontend/build/
+        path: dist/
         retention-days: 7
 
   integration-test:
@@ -89,7 +86,6 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: package-lock.json
     
     - name: Install Python dependencies
       run: |
@@ -97,11 +93,9 @@ jobs:
         pip install -r requirements.txt
     
     - name: Install frontend dependencies
-      working-directory: ./frontend
       run: npm ci
     
     - name: Build frontend
-      working-directory: ./frontend
       run: npm run build
     
     - name: Start backend server
@@ -136,7 +130,6 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: package-lock.json
     
     - name: Install Python dependencies
       run: |
@@ -146,23 +139,21 @@ jobs:
     
     - name: Install and build frontend
       run: |
-        cd frontend
         npm ci
         npm run build
-        cd ..
     
     - name: Verify frontend build exists
       run: |
-        if (-Not (Test-Path "frontend/build")) {
-          Write-Error "Error: frontend/build directory not found"
+        if (-Not (Test-Path "dist")) {
+          Write-Error "Error: dist directory not found"
           exit 1
         }
-        Get-ChildItem frontend/build
+        Get-ChildItem dist
     
     - name: Build Windows executable
       run: |
         pyinstaller --onefile --name Spotifree-Windows `
-          --add-data "frontend/build;frontend/build" `
+          --add-data "dist;dist" `
           --hidden-import=flask `
           --hidden-import=flask_cors `
           --collect-all flask `
@@ -205,7 +196,6 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: package-lock.json
     
     - name: Install Python dependencies
       run: |
@@ -215,24 +205,21 @@ jobs:
     
     - name: Install and build frontend
       run: |
-        cd frontend
         npm ci
         npm run build
-        cd ..
     
     - name: Verify frontend build exists
       run: |
-        ls -la frontend/
-        if [ ! -d "frontend/build" ]; then
-          echo "Error: frontend/build directory not found"
+        if [ ! -d "dist" ]; then
+          echo "Error: dist directory not found"
           exit 1
         fi
-        ls -la frontend/build/
+        ls -la dist/
     
     - name: Build Linux executable
       run: |
         pyinstaller --onefile --name Spotifree-Linux \
-          --add-data "frontend/build:frontend/build" \
+          --add-data "dist:dist" \
           --hidden-import=flask \
           --hidden-import=flask_cors \
           --collect-all flask \
