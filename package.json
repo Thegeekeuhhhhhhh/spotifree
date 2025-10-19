@@ -1,5 +1,6 @@
 {
   "name": "spotifree",
+  "homepage": "https://thegeekeuhhhhhhh.github.io/spotifree/",
   "version": "1.0.0",
   "type": "module",
   "main": "main.js",
@@ -9,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "electron .",
-    "dist": "electron-builder"
+    "dist": "electron-builder",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "build": {
     "appId": "com.myapp.desktop",
@@ -25,6 +28,7 @@
   },
   "dependencies": {
     "express": "^5.1.0",
+    "gh-pages": "^6.3.0",
     "lucide-react": "^0.546.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
