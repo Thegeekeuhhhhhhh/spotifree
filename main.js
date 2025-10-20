@@ -12,8 +12,8 @@ let pythonProcess = null;
 
 function createWindow () {
   const win = new BrowserWindow({
-    width: 1440,
-    height: 920,
+    width: 1600,
+    height: 1000,
     webPreferences: {
       nodeIntegration: false, // or true depending on your setup
       contextIsolation: true, // for security

@@ -18,7 +18,7 @@ function App() {
   const [likedTracks, setLikedTracks] = useState(new Set());
   const [duration, setDuration] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const progressInterval = useRef(null);
+  const audioPlayer = useRef(null);
 
   const tracks = [
     { id: 1, title: "Caca", artist: "Michel feur", album: "jsp gros", duration: 245 },
@@ -34,12 +34,19 @@ function App() {
     { name: "ouais", count: 15 },
   ];
 
+  
+  useEffect(() => {
+    if (audioPlayer.current) {
+      audioPlayer.current.volume = volume; // apply volume to player
+    }
+  }, [volume]);
+
   useEffect(() => {
     if (isPlaying) {
       const trackDuration = tracks[currentTrack].duration;
       setDuration(trackDuration);
       
-      progressInterval.current = setInterval(() => {
+      audioPlayer.current = setInterval(() => {
         setProgress(prev => {
           if (prev >= trackDuration) {
             handleNext();
@@ -49,14 +56,14 @@ function App() {
         });
       }, 1000);
     } else {
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
+      if (audioPlayer.current) {
+        clearInterval(audioPlayer.current);
       }
     }
 
     return () => {
-      if (progressInterval.current) {
-        clearInterval(progressInterval.current);
+      if (audioPlayer.current) {
+        clearInterval(audioPlayer.current);
       }
     };
   }, [isPlaying, currentTrack]);

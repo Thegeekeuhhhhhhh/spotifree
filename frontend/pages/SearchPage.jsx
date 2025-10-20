@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, Music } from 'lucide-react';
 import TrackItem from '../components/TrackItem';
 
@@ -10,25 +10,10 @@ const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, li
     track.album.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  console.log("GO CHERCHER");
+  const [isSearching, setIsSearching] = useState(false);
+  const [musics, setMusics] = useState([]);
   
 
-
-
-  React.useEffect(() => {
-    const testFetch = async () => {
-      try {
-        console.log("GO CHERCHER");
-        const response = await fetch("http://localhost:4444/search/prout");
-        const data = await response.json(); // Parse JSON response
-        console.log("Fetched data:", data);
-      } catch (error) {
-        console.error("Fetch error:", error);
-      }
-    };
-    
-    testFetch();
-  }, []);
 
 
   const genres = [
@@ -40,6 +25,22 @@ const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, li
     { name: 'Classical', colors: ['#477d95', '#8d67ab'] }
   ];
 
+  useEffect(() => {
+    if (searchQuery.trim() == '') return;
+    const delayDebounce = setTimeout(() => {
+      setIsSearching(true);
+      fetch(`http://localhost:4444/search/${searchQuery}`).then(result1 => {
+        result1.json().then(result2 => {
+          console.log(result2["result"]);
+          setIsSearching(false);
+          setMusics(result2["result"]);
+        });
+      });
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
+
   return (
     <div style={{ padding: '24px' }}>
       <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px' }}>Search</h2>
@@ -50,7 +51,9 @@ const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, li
           type="text"
           placeholder="What do you want to listen to?"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+          }}
           style={{
             width: '100%',
             padding: '12px 16px 12px 48px',
@@ -94,14 +97,14 @@ const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, li
       ) : (
         <div>
           <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>
-            {filteredTracks.length > 0 ? `Found ${filteredTracks.length} track${filteredTracks.length > 1 ? 's' : ''}` : 'No results found'}
+            {musics.length > 0 ? `Found ${musics.length} track${musics.length > 1 ? 's' : ''}` : 'No results found'}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {filteredTracks.map((track) => (
+            {musics.map((track, idx) => (
               <TrackItem
                 key={track.id}
                 track={track}
-                index={tracks.indexOf(track)}
+                index={idx}
                 currentTrack={currentTrack}
                 isPlaying={isPlaying}
                 playTrack={playTrack}

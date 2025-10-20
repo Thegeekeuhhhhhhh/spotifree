@@ -1,11 +1,37 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
 
 const TrackItem = ({ track, index, currentTrack, isPlaying, playTrack, toggleLike, likedTracks }) => {
+  const [songToPlay, setSongToPlay] = useState("");
+  const audioRef = useRef(null);
+
+  console.log(songToPlay);
+  
+  useEffect(() => {
+    if (index === currentTrack && songToPlay) {
+      if (isPlaying) {
+        audioRef.current?.play();
+      } else {
+        audioRef.current?.pause();
+      }
+    } else {
+      audioRef.current?.pause();
+    }
+  }, [isPlaying, currentTrack, songToPlay, index]);
+
   return (
     <div
-      onClick={() => playTrack(index)}
+      onClick={() => {
+        playTrack(index);
+        const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
+        fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
+          result1.json().then(result2 => {
+            setSongToPlay(result2.name);
+            console.log("Downloaded", result2);
+          });
+        });
+      }}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -23,6 +49,10 @@ const TrackItem = ({ track, index, currentTrack, isPlaying, playTrack, toggleLik
         if (index !== currentTrack) e.currentTarget.style.backgroundColor = 'transparent';
       }}
     >
+      
+      {index === currentTrack && songToPlay && (
+        <audio ref={audioRef} src={`../data/videos/${songToPlay}`} autoPlay />
+      )}
       <div style={{
         width: '48px',
         height: '48px',
