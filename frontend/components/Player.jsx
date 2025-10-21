@@ -5,7 +5,7 @@ import { formatTime } from '../utils/helpers';
 const Player = ({ 
   track, isPlaying, setIsPlaying, progress, setProgress, duration, 
   volume, setVolume, isMuted, setIsMuted, isShuffle, setIsShuffle,
-  repeatMode, setRepeatMode, handleNext, handlePrevious, toggleLike, likedTracks 
+  repeatMode, setRepeatMode, handleNext, handlePrevious, toggleLike, likedTracks
 }) => {
   const togglePlay = () => setIsPlaying(!isPlaying);
   
@@ -17,7 +17,7 @@ const Player = ({
   const handleVolumeChange = (e) => {
     const newVolume = parseInt(e.target.value);
     setVolume(newVolume);
-    if (newVolume === 0) {
+    if (newVolume == 0) {
       setIsMuted(true);
     } else if (isMuted) {
       setIsMuted(false);
@@ -45,16 +45,16 @@ const Player = ({
               <Music size={24} />
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.title}</div>
-              <div style={{ fontSize: '14px', color: '#b3b3b3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.artist}</div>
+              <div style={{ fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track?.title}</div>
+              <div style={{ fontSize: '14px', color: '#b3b3b3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track?.artist}</div>
             </div>
           </div>
           
-          <button onClick={() => toggleLike(track.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
+          <button onClick={() => toggleLike(track?.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
             <Heart
               size={24}
-              style={{ color: likedTracks.has(track.id) ? '#1db954' : '#b3b3b3' }}
-              fill={likedTracks.has(track.id) ? '#1db954' : 'none'}
+              style={{ color: likedTracks.has(track?.id) ? '#1db954' : '#b3b3b3' }}
+              fill={likedTracks.has(track?.id) ? '#1db954' : 'none'}
             />
           </button>
         </div>

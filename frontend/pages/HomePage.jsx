@@ -1,7 +1,7 @@
 import React from 'react';
 import TrackItem from '../components/TrackItem';
 
-const HomePage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, likedTracks }) => {
+const HomePage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, likedTracks, volume }) => {
   return (
     <>
       <div style={{ padding: '24px' }}>
@@ -21,6 +21,7 @@ const HomePage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, like
               playTrack={playTrack}
               toggleLike={toggleLike}
               likedTracks={likedTracks}
+              volume={volume}
             />
           ))}
         </div>

@@ -3,11 +3,12 @@ import { Search, Music } from 'lucide-react';
 import TrackItem from '../components/TrackItem';
 
 
-const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, likedTracks, searchQuery, setSearchQuery }) => {
+const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, likedTracks, searchQuery, setSearchQuery, volume }) => {
+  console.log(tracks);
+  console.log(searchQuery);
   const filteredTracks = tracks.filter(track => 
     track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    track.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    track.album.toLowerCase().includes(searchQuery.toLowerCase())
+    track.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const [isSearching, setIsSearching] = useState(false);
@@ -110,6 +111,7 @@ const SearchPage = ({ tracks, currentTrack, isPlaying, playTrack, toggleLike, li
                 playTrack={playTrack}
                 toggleLike={toggleLike}
                 likedTracks={likedTracks}
+                volume={volume}
               />
             ))}
           </div>

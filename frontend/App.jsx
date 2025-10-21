@@ -18,15 +18,11 @@ function App() {
   const [likedTracks, setLikedTracks] = useState(new Set());
   const [duration, setDuration] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const audioPlayer = useRef(null);
+  const audioRef = useRef(null);
 
-  const tracks = [
-    { id: 1, title: "Caca", artist: "Michel feur", album: "jsp gros", duration: 245 },
-    { id: 2, title: "Prout", artist: "Cyber Wave", album: "oe", duration: 198 },
-    { id: 3, title: "Midnight Dreams", artist: "Luna Sky", album: "Nocturne", duration: 212 },
-    { id: 4, title: "Electric Soul", artist: "Neon Lights", album: "Pulse", duration: 189 },
-    { id: 5, title: "Ocean Waves", artist: "Calm Collective", album: "Serenity", duration: 234 },
-  ];
+  console.log(volume);
+
+  const [tracks, setTracks] = useState([]);
 
   const playlists = [
     { name: "p1", count: 30 },
@@ -34,19 +30,24 @@ function App() {
     { name: "ouais", count: 15 },
   ];
 
-  
   useEffect(() => {
-    if (audioPlayer.current) {
-      audioPlayer.current.volume = volume; // apply volume to player
-    }
-  }, [volume]);
+    fetch(`http://localhost:4444/tracks`).then(result1 => {
+      result1.json().then(result2 => {
+        console.log(result2["result"]);
+        setTracks(result2["result"]);
+      });
+    });
+  }, []);
+
+  console.log(tracks);
+  
 
   useEffect(() => {
     if (isPlaying) {
-      const trackDuration = tracks[currentTrack].duration;
+      const trackDuration = tracks[currentTrack].length;
       setDuration(trackDuration);
-      
-      audioPlayer.current = setInterval(() => {
+
+      audioRef.current = setInterval(() => {
         setProgress(prev => {
           if (prev >= trackDuration) {
             handleNext();
@@ -56,14 +57,14 @@ function App() {
         });
       }, 1000);
     } else {
-      if (audioPlayer.current) {
-        clearInterval(audioPlayer.current);
+      if (audioRef.current) {
+        clearInterval(audioRef.current);
       }
     }
 
     return () => {
-      if (audioPlayer.current) {
-        clearInterval(audioPlayer.current);
+      if (audioRef.current) {
+        clearInterval(audioRef.current);
       }
     };
   }, [isPlaying, currentTrack]);
@@ -133,6 +134,7 @@ function App() {
               playTrack={playTrack}
               toggleLike={toggleLike}
               likedTracks={likedTracks}
+              volume={volume}
             />
           </Route>
           <Route path="/search" currentPath={currentPath}>
@@ -145,10 +147,13 @@ function App() {
               likedTracks={likedTracks}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
+              volume={volume}
             />
           </Route>
           <Route path="/library" currentPath={currentPath}>
-            <LibraryPage playlists={playlists} />
+            <LibraryPage
+              playlists={playlists}
+            />
           </Route>
         </div>
 

@@ -98,6 +98,26 @@ def fetchVideo(url):
     return jsonify(metadata)
 
 
+@app.route('/tracks', methods=['GET'])
+def getTracks():
+    data = []
+    json_path = os.path.join('./data', 'metadata.json')
+    if os.path.exists(json_path):
+        with open(json_path, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = [data]  # Force into a list if needed
+            except json.JSONDecodeError:
+                data = []
+    else:
+        os.makedirs(os.path.dirname(json_path), exist_ok=True)
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump([], f, ensure_ascii=False, indent=4)
+
+    print(data)
+    return jsonify({ "result": data })
+
 @app.route('/search/<req>', methods=['GET'])
 def searchVideo(req):
     try:
