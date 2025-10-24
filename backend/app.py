@@ -38,6 +38,7 @@ def update_metadata_list(json_path, new_data):
         with open(json_path, 'r', encoding='utf-8') as f:
             try:
                 data = json.load(f)
+                print(data)
                 if not isinstance(data, list):
                     data = [data]  # Force into a list if needed
             except json.JSONDecodeError:
@@ -48,6 +49,7 @@ def update_metadata_list(json_path, new_data):
             json.dump([], f, ensure_ascii=False, indent=4)
 
     # Append new data
+    new_data["id"] = len(data) + 1
     data.append(new_data)
 
     # Save back to file

@@ -2,14 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
 
-const TrackItem = ({ track, index, currentTrack, isPlaying, playTrack, toggleLike, likedTracks, volume }) => {
-  const [songToPlay, setSongToPlay] = useState("");
+const TrackItem = ({ track, currentTrack, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime }) => {
   const audioRef = useRef(null);
 
-  console.log(songToPlay);
-  
+  console.log(audioRef);
+
   useEffect(() => {
-    if (index === currentTrack && songToPlay) {
+    if (track?.id === currentTrackObj?.id) {
       if (isPlaying) {
         audioRef.current?.play();
       } else {
@@ -18,7 +17,13 @@ const TrackItem = ({ track, index, currentTrack, isPlaying, playTrack, toggleLik
     } else {
       audioRef.current?.pause();
     }
-  }, [isPlaying, currentTrack, songToPlay, index]);
+  }, [isPlaying, currentTrackObj]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = currentTime;
+    }
+  }, [currentTime]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -29,17 +34,17 @@ const TrackItem = ({ track, index, currentTrack, isPlaying, playTrack, toggleLik
   return (
     <div
       onClick={() => {
-        playTrack(index);
+        playTrack(track.id);
         if (track.url) {
           const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
           fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
             result1.json().then(result2 => {
-              setSongToPlay(result2.name);
-              console.log("Downloaded", result2);
+              setCurrentTrackObj(result2);
+              console.log("Downloaded", result2.title);
             });
           });
         } else {
-          setSongToPlay(track.name);
+          setCurrentTrackObj(track);
         }
       }}
       style={{
@@ -49,19 +54,19 @@ const TrackItem = ({ track, index, currentTrack, isPlaying, playTrack, toggleLik
         padding: '12px',
         borderRadius: '8px',
         cursor: 'pointer',
-        backgroundColor: index === currentTrack ? '#282828' : 'transparent',
+        backgroundColor: track?.id == currentTrackObj?.id ? '#282828' : 'transparent',
         transition: 'background-color 0.2s'
       }}
       onMouseEnter={(e) => {
-        if (index !== currentTrack) e.currentTarget.style.backgroundColor = '#282828';
+        if (track?.id != currentTrackObj?.id) e.currentTarget.style.backgroundColor = '#282828';
       }}
       onMouseLeave={(e) => {
-        if (index !== currentTrack) e.currentTarget.style.backgroundColor = 'transparent';
+        if (track?.id != currentTrackObj?.id) e.currentTarget.style.backgroundColor = 'transparent';
       }}
     >
       
-      {index === currentTrack && songToPlay && (
-        <audio ref={audioRef} src={`../data/videos/${songToPlay}`} autoPlay />
+      {track?.id == currentTrackObj?.id && (
+        <audio ref={audioRef} src={`../data/videos/${currentTrackObj.name}`} autoPlay />
       )}
       <div style={track.miniature ? {
         width: '48px',
@@ -84,7 +89,7 @@ const TrackItem = ({ track, index, currentTrack, isPlaying, playTrack, toggleLik
         justifyContent: 'center',
         flexShrink: 0
       }}>
-        {index === currentTrack && isPlaying ? <Pause size={20} /> : <Play size={20} />}
+        {track?.id == currentTrackObj?.id && isPlaying ? <Pause size={20} /> : <Play size={20} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track?.title}</div>

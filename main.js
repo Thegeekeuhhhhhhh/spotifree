@@ -30,7 +30,6 @@ function startPythonServer() {
   pythonProcess = spawn('python', [script]);
 
   pythonProcess.stdout.on('data', (data) => {
-    console.log(`Python stdout: ${data}`);
   });
 
   pythonProcess.stderr.on('data', (data) => {
@@ -38,7 +37,6 @@ function startPythonServer() {
   });
 
   pythonProcess.on('close', (code) => {
-    console.log(`Python process exited with code ${code}`);
   });
 }
 
