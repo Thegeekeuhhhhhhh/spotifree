@@ -14,8 +14,8 @@ function App() {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [currentTrackObj, setCurrentTrackObj] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(40);
-  const [oldVolume, setOldVolume] = useState(40);
+  const [volume, setVolume] = useState(10);
+  const [oldVolume, setOldVolume] = useState(10);
   const [isMuted, setIsMuted] = useState(false);
   const [isShuffle, setIsShuffle] = useState(false);
   const [repeatMode, setRepeatMode] = useState(0);
@@ -82,7 +82,6 @@ function App() {
     });
     fetch(`http://localhost:4444/playlist/list`).then(result1 => {
       result1.json().then(result2 => {
-        console.log(result2);
         setPlaylists(prev => [
           ...prev,
           ...result2,
@@ -90,10 +89,6 @@ function App() {
       });
     });
   }, []);
-
-
-  console.log(tracks);
-  
 
   useEffect(() => {
     if (isPlaying) {
@@ -148,6 +143,8 @@ function App() {
     setProgress(0);
   };
 
+  console.log(selectedPlaylist);
+
   const handlePrevious = () => {
     if (progress > 5) {
       setProgress(0);
@@ -172,14 +169,21 @@ function App() {
 
   const toggleLike = (trackId) => {
     const newLiked = [...likedTracks];
+    let found = false;
     for (let i = 0; i < newLiked.length; i++) {
-      if (newLiked[i] == trackId) {
+      if (newLiked[i].id == trackId) {
         newLiked.splice(i, 1);
-        setLikedTracks(newLiked);
-        return;
+        found = true;
+        break;
       }
     }
-    newLiked.push(trackId);
+    if (!found) {
+      newLiked.push(tracks.filter(e => e.id == trackId)[0]);
+    }
+    setPlaylists(prev => [
+    { id: 0, name: "Liked Songs", tracks: newLiked },
+      ...prev.filter(e => e.id != 0),
+    ])
     setLikedTracks(newLiked);
   };
 
@@ -199,7 +203,6 @@ function App() {
   };
 
   const [playlistName, setPlaylistName] = useState('');
-  console.log(playlistName);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -214,7 +217,6 @@ function App() {
         }
       }).then(result1 => {
         result1.json().then(result2 => {
-          console.log(result2);
           setPlaylists(prev => [
             ...prev,
             result2,
@@ -288,6 +290,7 @@ function App() {
           playlists={playlists}
           setTracks={setTracks}
           setPlaylistCreationPopUp={setPlaylistCreationPopUp}
+          setSelectedPlaylist={setSelectedPlaylist}
         />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #5b247a 0%, #000 100%)', width: "100%", overflow: 'hidden' }}>
@@ -412,7 +415,7 @@ function App() {
                 <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '16px' }}>Your Library</h2>
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {playlists.map(playlist => (
+                  {playlists?.map(playlist => (
                     <div
                       key={playlist.id}
                       style={{
@@ -429,7 +432,7 @@ function App() {
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       onClick={() => {
                         setSelectedPlaylist(playlist);
-                        navigate('/playlist')
+                        navigate('/playlist');
                       }}
                     >
                       <div style={{
@@ -455,12 +458,12 @@ function App() {
             <Route path="/playlist" currentPath={currentPath}>
               <>
                 <div style={{ padding: '24px' }}>
-                  <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>Playing Now</h2>
-                  <p style={{ color: '#b3b3b3' }}>Your favorite tracks</p>
+                  <h2 style={{ fontSize: '32px', fontWeight: 'bold', marginBottom: '8px' }}>{selectedPlaylist?.name}</h2>
+                  {/* <p style={{ color: '#b3b3b3' }}>All your tracks</p> */}
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '0 24px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {tracks?.map(track => (
+                    {selectedPlaylist?.tracks?.map(track => (
                       <TrackItem
                         key={track.id}
                         track={track}
@@ -477,7 +480,7 @@ function App() {
                         setProgress={setProgress}
                         setIsPlaying={setIsPlaying}
                         setTrackList={setTrackList}
-                        trackSearch={tracks}
+                        trackSearch={[...selectedPlaylist.tracks]}
                       />
                     ))}
                   </div>

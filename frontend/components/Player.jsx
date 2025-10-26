@@ -14,10 +14,13 @@ const handleProgressChange = (e) => {
   const audioRef = useRef(null);
 
   useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
     if (isPlaying) {
-    audioRef.current?.play();
+      audioRef.current?.play();
     } else {
-    audioRef.current?.pause();
+      audioRef.current?.pause();
     }
   }, [isPlaying, currentTrackObj]);
 
@@ -32,6 +35,7 @@ const handleProgressChange = (e) => {
       audioRef.current.volume = volume / 100;
     }
   }, [volume]);
+
 
 const handleVolumeChange = (e) => {
     let newVolume = parseInt(e.target.value);
@@ -95,8 +99,8 @@ return (
         <button onClick={() => toggleLike(currentTrackObj?.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
             <Heart
             size={24}
-            style={{ color: likedTracks.filter(e => e == currentTrackObj?.id).length > 0 ? '#1db954' : '#b3b3b3' }}
-            fill={likedTracks.filter(e => e == currentTrackObj?.id).length > 0 ? '#1db954' : 'none'}
+            style={{ color: likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : '#b3b3b3' }}
+            fill={likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : 'none'}
             />
         </button>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Music, Search, Home, Library } from 'lucide-react';
 
-const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp }) => {
+const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp, setSelectedPlaylist }) => {
   return (
     <div style={{ width: "240px", backgroundColor: '#000', padding: '24px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ marginBottom: '32px' }}>
@@ -16,7 +16,6 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
               navigate('/');
               fetch("http://localhost:4444/tracks").then(result1 => {
                 result1.json().then(result2 => {
-                  console.log(result2);
                   setTracks(result2["result"]);
                 })
               })
@@ -97,6 +96,8 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {playlists.map(playlist => (
             <div onClick={() => {
+              navigate('/playlist');
+              setSelectedPlaylist(playlist);
               setTracks(playlist.tracks);
             }}
             key={playlist.id} style={{ color: '#b3b3b3', cursor: 'pointer' }}>

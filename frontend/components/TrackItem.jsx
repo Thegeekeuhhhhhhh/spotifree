@@ -3,32 +3,6 @@ import { Play, Pause, Heart } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
 
 const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch }) => {
-  // const audioRef = useRef(null);
-
-  // useEffect(() => {
-  //   if (track?.id === currentTrackObj?.id) {
-  //     if (isPlaying) {
-  //       audioRef.current?.play();
-  //     } else {
-  //       audioRef.current?.pause();
-  //     }
-  //   } else {
-  //     audioRef.current?.pause();
-  //   }
-  // }, [isPlaying, currentTrackObj]);
-
-  // useEffect(() => {
-  //   if (audioRef.current) {
-  //     audioRef.current.currentTime = currentTime;
-  //   }
-  // }, [currentTime]);
-
-  // useEffect(() => {
-  //   if (audioRef.current) {
-  //     audioRef.current.volume = volume / 100;
-  //   }
-  // }, [volume]);
-
   return (
     <div
       onClick={() => {
@@ -40,12 +14,14 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
               setCurrentTrackObj(result2);
               setProgress(0);
               setIsPlaying(true);
-              setTrackList(trackSearch)
+              setTrackList(trackSearch);
+              console.log(trackSearch);
               console.log("Downloaded", result2.title);
             });
           });
         } else {
           setCurrentTrackObj(track);
+          setTrackList(trackSearch);
         }
       }}
       style={{
@@ -97,12 +73,10 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       <button
         onClick={(e) => {
           e.stopPropagation();
-          console.log(track);
           if (track?.url) {
             const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
             fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
               result1.json().then(result2 => {
-                console.log(result2);
                 toggleLike(result2.id);
                 console.log("Downloaded", result2.title);
               });
@@ -115,8 +89,8 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       >
         <Heart
           size={20}
-          style={{ color: likedTracks.filter(e => e == track.id).length > 0 ? '#1db954' : '#b3b3b3' }}
-          fill={likedTracks.filter(e => e == track.id).length > 0 ? '#1db954' : 'none'}
+          style={{ color: likedTracks.filter(e => e.id == track.id).length > 0 ? '#1db954' : '#b3b3b3' }}
+          fill={likedTracks.filter(e => e.id == track.id).length > 0 ? '#1db954' : 'none'}
         />
       </button>
       <div style={{ fontSize: '14px', color: '#b3b3b3', width: '48px', textAlign: 'right' }}>{formatTime(track?.length)}</div>
