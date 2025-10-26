@@ -1,7 +1,7 @@
 import React from 'react';
 import { Music, Search, Home, Library } from 'lucide-react';
 
-const Sidebar = ({ currentPath, navigate, playlists }) => {
+const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp }) => {
   return (
     <div style={{ width: "240px", backgroundColor: '#000', padding: '24px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ marginBottom: '32px' }}>
@@ -12,7 +12,15 @@ const Sidebar = ({ currentPath, navigate, playlists }) => {
         
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              navigate('/');
+              fetch("http://localhost:4444/tracks").then(result1 => {
+                result1.json().then(result2 => {
+                  console.log(result2);
+                  setTracks(result2["result"]);
+                })
+              })
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -32,7 +40,10 @@ const Sidebar = ({ currentPath, navigate, playlists }) => {
             Home
           </button>
           <button
-            onClick={() => navigate('/search')}
+            onClick={() => {
+              navigate('/search');
+              setTracks([]);
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -75,12 +86,22 @@ const Sidebar = ({ currentPath, navigate, playlists }) => {
       </div>
 
       <div style={{ flex: 1 }}>
-        <h2 style={{ fontSize: '12px', fontWeight: '600', color: '#b3b3b3', marginBottom: '12px', letterSpacing: '0.1em' }}>PLAYLISTS</h2>
+        <h2 style={{ fontSize: '12px', fontWeight: '600', color: '#b3b3b3', marginBottom: '12px', letterSpacing: '0.1em' }}>
+          {"PLAYLISTS "}
+          <button onClick={() => {
+            setPlaylistCreationPopUp(true);
+          }}>
+            NEW +
+          </button>
+        </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {playlists.map((playlist, idx) => (
-            <div key={idx} style={{ color: '#b3b3b3', cursor: 'pointer' }}>
+          {playlists.map(playlist => (
+            <div onClick={() => {
+              setTracks(playlist.tracks);
+            }}
+            key={playlist.id} style={{ color: '#b3b3b3', cursor: 'pointer' }}>
               <div style={{ fontWeight: '500' }}>{playlist.name}</div>
-              <div style={{ fontSize: '12px' }}>{playlist.count} songs</div>
+              <div style={{ fontSize: '12px' }}>{playlist.tracks.length} songs</div>
             </div>
           ))}
         </div>

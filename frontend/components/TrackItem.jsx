@@ -2,34 +2,32 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Heart } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
 
-const TrackItem = ({ track, currentTrack, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime }) => {
-  const audioRef = useRef(null);
+const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch }) => {
+  // const audioRef = useRef(null);
 
-  console.log(audioRef);
+  // useEffect(() => {
+  //   if (track?.id === currentTrackObj?.id) {
+  //     if (isPlaying) {
+  //       audioRef.current?.play();
+  //     } else {
+  //       audioRef.current?.pause();
+  //     }
+  //   } else {
+  //     audioRef.current?.pause();
+  //   }
+  // }, [isPlaying, currentTrackObj]);
 
-  useEffect(() => {
-    if (track?.id === currentTrackObj?.id) {
-      if (isPlaying) {
-        audioRef.current?.play();
-      } else {
-        audioRef.current?.pause();
-      }
-    } else {
-      audioRef.current?.pause();
-    }
-  }, [isPlaying, currentTrackObj]);
+  // useEffect(() => {
+  //   if (audioRef.current) {
+  //     audioRef.current.currentTime = currentTime;
+  //   }
+  // }, [currentTime]);
 
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = currentTime;
-    }
-  }, [currentTime]);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
+  // useEffect(() => {
+  //   if (audioRef.current) {
+  //     audioRef.current.volume = volume / 100;
+  //   }
+  // }, [volume]);
 
   return (
     <div
@@ -40,6 +38,9 @@ const TrackItem = ({ track, currentTrack, isPlaying, playTrack, toggleLike, like
           fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
             result1.json().then(result2 => {
               setCurrentTrackObj(result2);
+              setProgress(0);
+              setIsPlaying(true);
+              setTrackList(trackSearch)
               console.log("Downloaded", result2.title);
             });
           });
@@ -65,9 +66,6 @@ const TrackItem = ({ track, currentTrack, isPlaying, playTrack, toggleLike, like
       }}
     >
       
-      {track?.id == currentTrackObj?.id && (
-        <audio ref={audioRef} src={`../data/videos/${currentTrackObj.name}`} autoPlay />
-      )}
       <div style={track.miniature ? {
         width: '48px',
         height: '48px',
@@ -99,17 +97,29 @@ const TrackItem = ({ track, currentTrack, isPlaying, playTrack, toggleLike, like
       <button
         onClick={(e) => {
           e.stopPropagation();
-          toggleLike(track?.id);
+          console.log(track);
+          if (track?.url) {
+            const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
+            fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
+              result1.json().then(result2 => {
+                console.log(result2);
+                toggleLike(result2.id);
+                console.log("Downloaded", result2.title);
+              });
+            });
+          } else if (track?.name) {
+            toggleLike(track.id);
+          }
         }}
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
       >
         <Heart
           size={20}
-          style={{ color: likedTracks.has(track.id) ? '#1db954' : '#b3b3b3' }}
-          fill={likedTracks.has(track.id) ? '#1db954' : 'none'}
+          style={{ color: likedTracks.filter(e => e == track.id).length > 0 ? '#1db954' : '#b3b3b3' }}
+          fill={likedTracks.filter(e => e == track.id).length > 0 ? '#1db954' : 'none'}
         />
       </button>
-      <div style={{ fontSize: '14px', color: '#b3b3b3', width: '48px', textAlign: 'right' }}>{formatTime(track.length)}</div>
+      <div style={{ fontSize: '14px', color: '#b3b3b3', width: '48px', textAlign: 'right' }}>{formatTime(track?.length)}</div>
     </div>
   );
 };
