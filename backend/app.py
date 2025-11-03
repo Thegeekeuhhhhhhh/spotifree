@@ -67,10 +67,54 @@ def get_playlists():
                 
     return jsonify(data)
 
+@app.route('/playlist/get/<playlist_id>', methods=['GET'])
+def get_playlist(playlist_id):
+    playlists = []
+    if os.path.exists('./data/playlists.json'):
+        with open('./data/playlists.json', 'r', encoding='utf-8') as f:
+            try:
+                playlists = json.load(f)
+                if not isinstance(playlists, list):
+                    playlists = [playlists]
+            except json.JSONDecodeError:
+                playlists = []
+    else:
+        return
+    
+    playlist = None
+    for p in playlists:
+        if int(p["id"]) == int(playlist_id):
+            playlist = p
+            break
+    if playlist == None:
+        return
+
+    tracks = []
+    json_path = os.path.join('./data', 'metadata.json')
+    if os.path.exists(json_path):
+        with open(json_path, 'r', encoding='utf-8') as f:
+            try:
+                tracks = json.load(f)
+                if not isinstance(tracks, list):
+                    tracks = [tracks]
+            except json.JSONDecodeError:
+                tracks = []
+    else:
+        return
+
+    completeTracks = []
+    for track in playlist["tracks"]:
+        for t in tracks:
+            if int(track) == t["id"]:
+                completeTracks.append(t)
+                break
+
+    playlist["tracks"] = completeTracks
+    return jsonify(playlist)
+
 @app.route('/playlist/create', methods=['POST'])
 def create_playlist():
     name = request.json.get('name', '')
-    print(name)
     if (name == ''):
         return
     
@@ -95,16 +139,16 @@ def create_playlist():
     new_data["tracks"] = []
     data.append(new_data)
 
-    # Save updated metadata
+    # Save updated data
     with open('./data/playlists.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     return jsonify(new_data)
 
 @app.route('/playlist/update', methods=['POST'])
 def update_playlist():
-    track = request.json.get('track', None)
-    playlist_id = request.json.get('playlist_id', None)
-    if (track == None or playlist_id == None):
+    track = int(request.json.get('track', -1))
+    playlist_id = int(request.json.get('playlist_id', -1))
+    if (track == -1 or playlist_id == -1):
         return
     
     data = []
@@ -124,12 +168,13 @@ def update_playlist():
     pl = None
     for elt in data:
         if elt["id"] == playlist_id:
-            elt["tracks"].append(track)
-            pl = elt["tracks"]
+            if track not in elt["tracks"]:
+                elt["tracks"].append(track)
+                pl = elt["tracks"]
     if (pl == None):
         return
 
-    # Save updated metadata
+    # Save updated data
     with open('./data/playlists.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     return jsonify(pl)

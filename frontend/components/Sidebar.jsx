@@ -1,7 +1,22 @@
 import React from 'react';
 import { Music, Search, Home, Library } from 'lucide-react';
 
-const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp, setSelectedPlaylist }) => {
+const DropZone = ({ onDrop, name, tracksNumber }) => {
+  return (
+    <div
+      onDrop={onDrop}
+      onDragOver={(e) => e.preventDefault()}
+      style={{ border: '1px dashed #ddd' }}
+    >
+      <div style={{ color: '#b3b3b3', cursor: 'pointer' }}>
+        <div style={{ fontWeight: '500' }}>{name}</div>
+        <div style={{ fontSize: '12px' }}>{tracksNumber} song{tracksNumber == 1 ? '' : 's'}</div>
+      </div>
+    </div>
+  );
+};
+
+const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp, setSelectedPlaylist, tracks, dragging, setPlaylists }) => {
   return (
     <div style={{ width: "240px", backgroundColor: '#000', padding: '24px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ marginBottom: '32px' }}>
@@ -95,15 +110,57 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {playlists.map(playlist => (
-            <div onClick={() => {
-              navigate('/playlist');
-              setSelectedPlaylist(playlist);
-              setTracks(playlist.tracks);
-            }}
-            key={playlist.id} style={{ color: '#b3b3b3', cursor: 'pointer' }}>
-              <div style={{ fontWeight: '500' }}>{playlist.name}</div>
-              <div style={{ fontSize: '12px' }}>{playlist.tracks.length} songs</div>
-            </div>
+            dragging ? (
+              <DropZone
+                key={playlist.id}
+                onDrop={(e) => {
+                  const droppedTrackId = e.dataTransfer.getData('text/plain');
+                  // console.log(droppedTrackId);
+                  // console.log(tracks);
+                  // const droppedTrack = tracks.filter((e) => e.id == droppedTrackId)[0];
+                  // console.log('Dropped track:', droppedTrack);
+                  
+                  fetch(`http://localhost:4444/playlist/update`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                      track: droppedTrackId,
+                      playlist_id: playlist.id,
+                    }),
+                    headers: {
+                      "Content-type": "application/json"
+                    }
+                  }).then(result1 => {
+                    result1.json().then(result2 => {
+                      const oldPlaylists = [...playlists];
+                      for (let i = 0; i < oldPlaylists.length; i++) {
+                        if (oldPlaylists[i].id == playlist.id) {
+                          oldPlaylists[i]["tracks"] = result2;
+                        }
+                      }
+                      setPlaylists(oldPlaylists);
+                    });
+                  });
+                }}
+                name={playlist.name}
+                tracksNumber={playlist.tracks?.length}
+              /> ) : (
+              <div onClick={() => {
+                navigate('/playlist');
+                setSelectedPlaylist(playlist);
+                setTracks(playlist.tracks);
+                if (playlist.id) {
+                  fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
+                    result1.json().then(result2 => {
+                      setSelectedPlaylist(result2);
+                    });
+                  });
+                }
+              }}
+              key={playlist.id} style={{ color: '#b3b3b3', cursor: 'pointer' }}>
+                <div style={{ fontWeight: '500' }}>{playlist.name}</div>
+                <div style={{ fontSize: '12px' }}>{playlist.tracks?.length} song{playlist.tracks?.length == 1 ? '' : 's'}</div>
+              </div>
+            )
           ))}
         </div>
       </div>

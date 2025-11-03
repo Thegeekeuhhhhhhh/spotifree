@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { formatTime } from "../utils/helpers";
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Music, Search } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Music, Search, Ellipsis } from 'lucide-react';
 
 const Player = ({ setIsPlaying, isPlaying, setProgress, progress, setOldVolume, oldVolume, setVolume, volume, setIsMuted, isMuted, setRepeatMode, repeatMode, currentTrackObj, toggleLike,
                 likedTracks, setIsShuffle, isShuffle, handlePrevious, handleNext, duration }) => {
@@ -97,11 +97,11 @@ return (
         </div>
         
         <button onClick={() => toggleLike(currentTrackObj?.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
-            <Heart
+          <Heart
             size={24}
             style={{ color: likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : '#b3b3b3' }}
             fill={likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : 'none'}
-            />
+          />
         </button>
         </div>
 

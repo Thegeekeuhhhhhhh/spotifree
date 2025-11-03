@@ -1,10 +1,39 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Play, Pause, Heart } from 'lucide-react';
+import { Play, Pause, Heart, Ellipsis } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
 
-const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch }) => {
+const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch, setDraggedTrack, setDragging }) => {  
+  const handleDragStart = (e) => {
+    setDraggedTrack(track);
+    setDragging(true);
+    e.dataTransfer.setData('text/plain', track.id);
+    e.target.style.opacity = 0.5;
+  };
+
+  const handleDragEnd = (e) => {
+    setDragging(false);
+    e.target.style.opacity = 1;
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    // const droppedTrackId = e.dataTransfer.getData('text/plain');
+    // const droppedTrack = trackSearch.find((t) => t.id === droppedTrackId);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  console.log(likedTracks);
+
   return (
     <div
+      draggable
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
       onClick={() => {
         playTrack(track.id);
         if (track.url) {
@@ -30,7 +59,7 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
         gap: '16px',
         padding: '12px',
         borderRadius: '8px',
-        cursor: 'pointer',
+        cursor: 'move',
         backgroundColor: track?.id == currentTrackObj?.id ? '#282828' : 'transparent',
         transition: 'background-color 0.2s'
       }}
@@ -72,6 +101,8 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       <div style={{ fontSize: '14px', color: '#b3b3b3' }}>{track?.album}</div>
       <button
         onClick={(e) => {
+          console.log(e);
+          console.log(track);
           e.stopPropagation();
           if (track?.url) {
             const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
@@ -81,7 +112,7 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
                 console.log("Downloaded", result2.title);
               });
             });
-          } else if (track?.name) {
+          } else {
             toggleLike(track.id);
           }
         }}
@@ -89,8 +120,15 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       >
         <Heart
           size={20}
-          style={{ color: likedTracks.filter(e => e.id == track.id).length > 0 ? '#1db954' : '#b3b3b3' }}
-          fill={likedTracks.filter(e => e.id == track.id).length > 0 ? '#1db954' : 'none'}
+          style={{ color: likedTracks.filter(e => e.id == track?.id).length > 0 ? '#1db954' : '#b3b3b3' }}
+          fill={likedTracks.filter(e => e.id == track?.id).length > 0 ? '#1db954' : 'none'}
+        />
+      </button>
+      <button onClick={() => toggleLike(currentTrackObj?.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
+        <Ellipsis
+          size={24}
+          style={{ color: likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : '#b3b3b3' }}
+          fill={likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : 'none'}
         />
       </button>
       <div style={{ fontSize: '14px', color: '#b3b3b3', width: '48px', textAlign: 'right' }}>{formatTime(track?.length)}</div>

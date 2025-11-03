@@ -25,6 +25,9 @@ function App() {
   const intervalRef = useRef(null);
   const [tracks, setTracks] = useState([]);
 
+  const [draggedTrack, setDraggedTrack] = useState(null);
+  const [dragging, setDragging] = useState(false);
+
   const [trackList, setTrackList] = useState([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState([]);
 
@@ -38,10 +41,10 @@ function App() {
 
 
 
-  const filteredTracks = tracks?.filter(track => 
-    track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    track.author.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredTracks = tracks?.filter(track => 
+  //   track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //   track.author.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
 
   const [isSearching, setIsSearching] = useState(false);
   const [musics, setMusics] = useState([]);
@@ -165,8 +168,6 @@ function App() {
     }
   };
 
-  console.log(likedTracks);
-
   const toggleLike = (trackId) => {
     const newLiked = [...likedTracks];
     let found = false;
@@ -186,6 +187,8 @@ function App() {
     ])
     setLikedTracks(newLiked);
   };
+
+  console.log(likedTracks);
 
   const playTrack = (id) => {
     if (isPlaying && id == currentTrackObj?.id) {
@@ -227,8 +230,6 @@ function App() {
       setPlaylistCreationPopUp(false);
     }
   };
-
-  console.log(playlists);
 
   return (
     <>
@@ -291,6 +292,9 @@ function App() {
           setTracks={setTracks}
           setPlaylistCreationPopUp={setPlaylistCreationPopUp}
           setSelectedPlaylist={setSelectedPlaylist}
+          tracks={tracks}
+          dragging={dragging}
+          setPlaylists={setPlaylists}
         />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #5b247a 0%, #000 100%)', width: "100%", overflow: 'hidden' }}>
@@ -321,6 +325,8 @@ function App() {
                         setIsPlaying={setIsPlaying}
                         setTrackList={setTrackList}
                         trackSearch={tracks}
+                        setDraggedTrack={setDraggedTrack}
+                        setDragging={setDragging}
                       />
                     ))}
                   </div>
@@ -403,6 +409,8 @@ function App() {
                           setProgress={setProgress}
                           setIsPlaying={setIsPlaying}
                           setTrackList={setTrackList}
+                          setDraggedTrack={setDraggedTrack}
+                          setDragging={setDragging}
                         />
                       ))}
                     </div>
@@ -431,8 +439,14 @@ function App() {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#282828'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       onClick={() => {
-                        setSelectedPlaylist(playlist);
                         navigate('/playlist');
+                        if (playlist.id != 0) {
+                          fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
+                            result1.json().then(result2 => {
+                              setSelectedPlaylist(result2);
+                            });
+                          });
+                        }
                       }}
                     >
                       <div style={{
@@ -448,7 +462,7 @@ function App() {
                       </div>
                       <div>
                         <div style={{ fontWeight: '600', fontSize: '16px' }}>{playlist.name}</div>
-                        <div style={{ fontSize: '14px', color: '#b3b3b3' }}>Playlist • {playlist.tracks.length} songs</div>
+                        <div style={{ fontSize: '14px', color: '#b3b3b3' }}>Playlist • {playlist.tracks?.length} song{playlist.tracks?.length == 1 ? '' : 's'}</div>
                       </div>
                     </div>
                   ))}
@@ -481,6 +495,8 @@ function App() {
                         setIsPlaying={setIsPlaying}
                         setTrackList={setTrackList}
                         trackSearch={[...selectedPlaylist.tracks]}
+                        setDraggedTrack={setDraggedTrack}
+                        setDragging={setDragging}
                       />
                     ))}
                   </div>
