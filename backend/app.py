@@ -65,7 +65,7 @@ def get_playlists():
             except json.JSONDecodeError:
                 data = []
                 
-    return jsonify(data)
+    return jsonify(data), 200
 
 @app.route('/playlist/get/<playlist_id>', methods=['GET'])
 def get_playlist(playlist_id):
@@ -79,7 +79,7 @@ def get_playlist(playlist_id):
             except json.JSONDecodeError:
                 playlists = []
     else:
-        return
+        return None, 404
     
     playlist = None
     for p in playlists:
@@ -87,7 +87,7 @@ def get_playlist(playlist_id):
             playlist = p
             break
     if playlist == None:
-        return
+        return None, 404
 
     tracks = []
     json_path = os.path.join('./data', 'metadata.json')
@@ -100,7 +100,8 @@ def get_playlist(playlist_id):
             except json.JSONDecodeError:
                 tracks = []
     else:
-        return
+        playlist["tracks"] = []
+        return jsonify(playlist), 200
 
     completeTracks = []
     for track in playlist["tracks"]:
@@ -110,13 +111,13 @@ def get_playlist(playlist_id):
                 break
 
     playlist["tracks"] = completeTracks
-    return jsonify(playlist)
+    return jsonify(playlist), 200
 
 @app.route('/playlist/create', methods=['POST'])
 def create_playlist():
     name = request.json.get('name', '')
     if (name == ''):
-        return
+        return None, 404
     
     data = []
     new_data = {}
@@ -131,7 +132,11 @@ def create_playlist():
     else:
         os.makedirs(os.path.dirname('./data/playlists.json'), exist_ok=True)
         with open('./data/playlists.json', 'w', encoding='utf-8') as f:
-            json.dump([], f, ensure_ascii=False, indent=4)
+            temp = {}
+            temp["id"] = 0
+            temp["name"] = "Liked"
+            temp["tracks"] = []
+            json.dump([temp], f, ensure_ascii=False, indent=4)
 
     # Append new data
     new_data["id"] = len(data) + 1
@@ -142,14 +147,14 @@ def create_playlist():
     # Save updated data
     with open('./data/playlists.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-    return jsonify(new_data)
+    return jsonify(new_data), 200
 
 @app.route('/playlist/update', methods=['POST'])
 def update_playlist():
     track = int(request.json.get('track', -1))
     playlist_id = int(request.json.get('playlist_id', -1))
     if (track == -1 or playlist_id == -1):
-        return
+        return None, 404
     
     data = []
     if os.path.exists('./data/playlists.json'):
@@ -163,7 +168,11 @@ def update_playlist():
     else:
         os.makedirs(os.path.dirname('./data/playlists.json'), exist_ok=True)
         with open('./data/playlists.json', 'w', encoding='utf-8') as f:
-            json.dump([], f, ensure_ascii=False, indent=4)
+            temp = {}
+            temp["id"] = 0
+            temp["name"] = "Liked"
+            temp["tracks"] = []
+            json.dump([temp], f, ensure_ascii=False, indent=4)
 
     pl = None
     for elt in data:
@@ -172,12 +181,12 @@ def update_playlist():
                 elt["tracks"].append(track)
                 pl = elt["tracks"]
     if (pl == None):
-        return
+        return None, 404
 
     # Save updated data
     with open('./data/playlists.json', 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-    return jsonify(pl)
+    return jsonify(pl), 200
 
 # Route to fetch video and download it
 @app.route('/fetch/video/<url>', methods=['GET'])
@@ -203,7 +212,7 @@ async def fetch_video(url):
     video_path = f"./data/videos/{name}.m4a"
     
     if os.path.exists(video_path):
-        return jsonify(metadata)
+        return jsonify(metadata), 200
 
     # Asynchronously download the audio
     await download_audio(video_url, "./data/videos", f"{name}.m4a")
@@ -211,7 +220,7 @@ async def fetch_video(url):
     # Update metadata asynchronously
     await update_metadata_list('./data/metadata.json', metadata)
 
-    return jsonify(metadata)
+    return jsonify(metadata), 200
 
 # Route to get all tracks
 @app.route('/tracks', methods=['GET'])
@@ -231,7 +240,7 @@ def get_tracks():
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump([], f, ensure_ascii=False, indent=4)
 
-    return jsonify({"result": data})
+    return jsonify({"result": data}), 200
 
 # Route to search for videos
 @app.route('/search/<req>', methods=['GET'])
@@ -250,9 +259,9 @@ def search_video(req):
                 "id": index,
             })
             index += 1
-        return jsonify({"result": res})
+        return jsonify({"result": res}), 200
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 200
 
 # Run the app
 if __name__ == "__main__":
