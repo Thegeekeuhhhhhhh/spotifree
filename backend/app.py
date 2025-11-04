@@ -64,6 +64,15 @@ def get_playlists():
                     data = [data]
             except json.JSONDecodeError:
                 data = []
+    else:
+        os.makedirs(os.path.dirname('./data/playlists.json'), exist_ok=True)
+        with open('./data/playlists.json', 'w', encoding='utf-8') as f:
+            temp = {}
+            temp["id"] = 0
+            temp["name"] = "Liked"
+            temp["tracks"] = []
+            data.append(temp)
+            json.dump([temp], f, ensure_ascii=False, indent=4)
                 
     return jsonify(data), 200
 
@@ -79,6 +88,14 @@ def get_playlist(playlist_id):
             except json.JSONDecodeError:
                 playlists = []
     else:
+        os.makedirs(os.path.dirname('./data/playlists.json'), exist_ok=True)
+        with open('./data/playlists.json', 'w', encoding='utf-8') as f:
+            temp = {}
+            temp["id"] = 0
+            temp["name"] = "Liked"
+            temp["tracks"] = []
+            json.dump([temp], f, ensure_ascii=False, indent=4)
+            return temp
         return None, 404
     
     playlist = None
