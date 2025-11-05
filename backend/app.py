@@ -69,7 +69,7 @@ def get_playlists():
         with open('./data/playlists.json', 'w', encoding='utf-8') as f:
             temp = {}
             temp["id"] = 0
-            temp["name"] = "Liked"
+            temp["name"] = "Liked Songs"
             temp["tracks"] = []
             data.append(temp)
             json.dump([temp], f, ensure_ascii=False, indent=4)
@@ -92,11 +92,12 @@ def get_playlist(playlist_id):
         with open('./data/playlists.json', 'w', encoding='utf-8') as f:
             temp = {}
             temp["id"] = 0
-            temp["name"] = "Liked"
+            temp["name"] = "Liked Songs"
             temp["tracks"] = []
+            playlists = [temp]
             json.dump([temp], f, ensure_ascii=False, indent=4)
-            return temp
-        return None, 404
+        if playlist_id != 0:
+            return "There is no playlist in the database", 404
     
     playlist = None
     for p in playlists:
@@ -104,7 +105,7 @@ def get_playlist(playlist_id):
             playlist = p
             break
     if playlist == None:
-        return None, 404
+        return "The given ID does not correspond to any playlist: " + str(playlist_id), 404
 
     tracks = []
     json_path = os.path.join('./data', 'metadata.json')
@@ -134,7 +135,7 @@ def get_playlist(playlist_id):
 def create_playlist():
     name = request.json.get('name', '')
     if (name == ''):
-        return None, 404
+        return "Given parameter seems to be null: " + str(name), 404
     
     data = []
     new_data = {}
@@ -151,7 +152,7 @@ def create_playlist():
         with open('./data/playlists.json', 'w', encoding='utf-8') as f:
             temp = {}
             temp["id"] = 0
-            temp["name"] = "Liked"
+            temp["name"] = "Liked Songs"
             temp["tracks"] = []
             json.dump([temp], f, ensure_ascii=False, indent=4)
 
@@ -171,7 +172,7 @@ def update_playlist():
     track = int(request.json.get('track', -1))
     playlist_id = int(request.json.get('playlist_id', -1))
     if (track == -1 or playlist_id == -1):
-        return None, 404
+        return "The given ID seems to be null", 404
     
     data = []
     if os.path.exists('./data/playlists.json'):
@@ -187,18 +188,22 @@ def update_playlist():
         with open('./data/playlists.json', 'w', encoding='utf-8') as f:
             temp = {}
             temp["id"] = 0
-            temp["name"] = "Liked"
+            temp["name"] = "Liked Songs"
             temp["tracks"] = []
             json.dump([temp], f, ensure_ascii=False, indent=4)
 
     pl = None
+    found = False
     for elt in data:
         if elt["id"] == playlist_id:
+            found = True
             if track not in elt["tracks"]:
                 elt["tracks"].append(track)
                 pl = elt["tracks"]
-    if (pl == None):
-        return None, 404
+    if not found:
+        return "The given ID does not correspond to an existing playlist: " + str(playlist_id), 404
+    if pl == None:
+        return "The given track is already present in the playlist !", 404
 
     # Save updated data
     with open('./data/playlists.json', 'w', encoding='utf-8') as f:

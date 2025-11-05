@@ -115,11 +115,7 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                 key={playlist.id}
                 onDrop={(e) => {
                   const droppedTrackId = e.dataTransfer.getData('text/plain');
-                  // console.log(droppedTrackId);
-                  // console.log(tracks);
-                  // const droppedTrack = tracks.filter((e) => e.id == droppedTrackId)[0];
-                  // console.log('Dropped track:', droppedTrack);
-                  
+                  console.log(droppedTrackId);
                   fetch(`http://localhost:4444/playlist/update`, {
                     method: "POST",
                     body: JSON.stringify({

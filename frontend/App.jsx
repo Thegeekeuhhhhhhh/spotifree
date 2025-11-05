@@ -32,9 +32,7 @@ function App() {
   const [selectedPlaylist, setSelectedPlaylist] = useState([]);
 
 
-  const [playlists, setPlaylists] = useState([
-    { id: 0, name: "Liked Songs", tracks: likedTracks },
-  ]);
+  const [playlists, setPlaylists] = useState([]);
 
   const [playlistCreationPopUp, setPlaylistCreationPopUp] = useState(false);
 
@@ -85,13 +83,17 @@ function App() {
     });
     fetch(`http://localhost:4444/playlist/list`).then(result1 => {
       result1.json().then(result2 => {
-        setPlaylists(prev => [
-          ...prev,
-          ...result2,
-        ]);
+        setPlaylists(result2);
+      });
+    });
+    fetch(`http://localhost:4444/playlist/get/0`).then(result1 => {
+      result1.json().then(result2 => {
+        setLikedTracks(result2.tracks);
       });
     });
   }, []);
+
+  console.log(likedTracks);
 
   useEffect(() => {
     if (isPlaying) {
@@ -146,8 +148,6 @@ function App() {
     setProgress(0);
   };
 
-  console.log(selectedPlaylist);
-
   const handlePrevious = () => {
     if (progress > 5) {
       setProgress(0);
@@ -181,11 +181,28 @@ function App() {
     if (!found) {
       newLiked.push(tracks.filter(e => e.id == trackId)[0]);
     }
-    setPlaylists(prev => [
-    { id: 0, name: "Liked Songs", tracks: newLiked },
-      ...prev.filter(e => e.id != 0),
-    ])
-    setLikedTracks(newLiked);
+    
+    fetch(`http://localhost:4444/playlist/update`, {
+      method: "POST",
+      body: JSON.stringify({
+        track: trackId,
+        playlist_id: 0,
+      }),
+      headers: {
+        "Content-type": "application/json"
+      }
+    }).then(result1 => {
+      result1.json().then(result2 => {
+        const oldPlaylists = [...playlists];
+        for (let i = 0; i < oldPlaylists.length; i++) {
+          if (oldPlaylists[i].id == 0) {
+            oldPlaylists[i]["tracks"] = result2;
+          }
+        }
+        setPlaylists(oldPlaylists);
+        setLikedTracks(newLiked);
+      });
+    });
   };
 
   console.log(likedTracks);
