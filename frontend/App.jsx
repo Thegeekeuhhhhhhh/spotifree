@@ -63,8 +63,10 @@ function App() {
       setIsSearching(true);
       fetch(`http://localhost:4444/search/${searchQuery}`).then(result1 => {
         result1.json().then(result2 => {
+          console.log(tracks)
+          console.log(result2);
           setIsSearching(false);
-          setTracks(result2["result"]);
+          setTracks(result2);
         });
       });
     }, 500);
@@ -73,12 +75,13 @@ function App() {
   }, [searchQuery]);
 
 
+  console.log(tracks);
 
   useEffect(() => {
     fetch(`http://localhost:4444/tracks`).then(result1 => {
       result1.json().then(result2 => {
-        setTracks(result2["result"]);
-        setTrackList(result2["result"]);
+        setTracks(result2);
+        setTrackList(result2);
       });
     });
     fetch(`http://localhost:4444/playlist/list`).then(result1 => {
@@ -92,8 +95,6 @@ function App() {
       });
     });
   }, []);
-
-  console.log(likedTracks);
 
   useEffect(() => {
     if (isPlaying) {
@@ -168,20 +169,19 @@ function App() {
     }
   };
 
-  const toggleLike = (trackId) => {
-    const newLiked = [...likedTracks];
+  console.log(likedTracks);
+
+  const toggleLike = (trackId, justFetched=false) => {
     let found = false;
-    for (let i = 0; i < newLiked.length; i++) {
-      if (newLiked[i].id == trackId) {
-        newLiked.splice(i, 1);
+    for (let i = 0; i < likedTracks.length; i++) {
+      if (likedTracks[i].id == trackId) {
+        likedTracks.splice(i, 1);
         found = true;
-        break;
+        // TODO: Fetch delete + update playlists
+        return;
       }
     }
-    if (!found) {
-      newLiked.push(tracks.filter(e => e.id == trackId)[0]);
-    }
-    
+
     fetch(`http://localhost:4444/playlist/update`, {
       method: "POST",
       body: JSON.stringify({
@@ -193,19 +193,23 @@ function App() {
       }
     }).then(result1 => {
       result1.json().then(result2 => {
-        const oldPlaylists = [...playlists];
-        for (let i = 0; i < oldPlaylists.length; i++) {
-          if (oldPlaylists[i].id == 0) {
-            oldPlaylists[i]["tracks"] = result2;
-          }
-        }
-        setPlaylists(oldPlaylists);
-        setLikedTracks(newLiked);
+        fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
+          result3.json().then(result4 => {
+            const oldPlaylists = [...playlists];
+            for (let i = 0; i < oldPlaylists.length; i++) {
+              if (oldPlaylists[i].id == 0) {
+                oldPlaylists[i] = result4;
+              }
+            }
+            if (!justFetched) {
+              setLikedTracks(result4.tracks);
+            }
+            setPlaylists(oldPlaylists);
+          });
+        });
       });
     });
   };
-
-  console.log(likedTracks);
 
   const playTrack = (id) => {
     if (isPlaying && id == currentTrackObj?.id) {
@@ -344,6 +348,8 @@ function App() {
                         trackSearch={tracks}
                         setDraggedTrack={setDraggedTrack}
                         setDragging={setDragging}
+                        setTracks={setTracks}
+                        setLikedTracks={setLikedTracks}
                       />
                     ))}
                   </div>
@@ -426,8 +432,11 @@ function App() {
                           setProgress={setProgress}
                           setIsPlaying={setIsPlaying}
                           setTrackList={setTrackList}
+                          trackSearch={tracks}
                           setDraggedTrack={setDraggedTrack}
                           setDragging={setDragging}
+                          setTracks={setTracks}
+                          setLikedTracks={setLikedTracks}
                         />
                       ))}
                     </div>
@@ -514,6 +523,8 @@ function App() {
                         trackSearch={[...selectedPlaylist.tracks]}
                         setDraggedTrack={setDraggedTrack}
                         setDragging={setDragging}
+                        setTracks={() => {}}
+                        setLikedTracks={setLikedTracks}
                       />
                     ))}
                   </div>

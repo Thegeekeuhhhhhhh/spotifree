@@ -31,7 +31,7 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
               navigate('/');
               fetch("http://localhost:4444/tracks").then(result1 => {
                 result1.json().then(result2 => {
-                  setTracks(result2["result"]);
+                  setTracks(result2);
                 })
               })
             }}
@@ -115,7 +115,6 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                 key={playlist.id}
                 onDrop={(e) => {
                   const droppedTrackId = e.dataTransfer.getData('text/plain');
-                  console.log(droppedTrackId);
                   fetch(`http://localhost:4444/playlist/update`, {
                     method: "POST",
                     body: JSON.stringify({
@@ -144,13 +143,11 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                 navigate('/playlist');
                 setSelectedPlaylist(playlist);
                 setTracks(playlist.tracks);
-                if (playlist.id) {
-                  fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
-                    result1.json().then(result2 => {
-                      setSelectedPlaylist(result2);
-                    });
+                fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
+                  result1.json().then(result2 => {
+                    setSelectedPlaylist(result2);
                   });
-                }
+                });
               }}
               key={playlist.id} style={{ color: '#b3b3b3', cursor: 'pointer' }}>
                 <div style={{ fontWeight: '500' }}>{playlist.name}</div>
