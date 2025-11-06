@@ -262,26 +262,57 @@ def get_tracks():
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump([], f, ensure_ascii=False, indent=4)
 
-    return jsonify({"result": data}), 200
+    return jsonify(data), 200
 
 # Route to search for videos
 @app.route('/search/<req>', methods=['GET'])
 def search_video(req):
+    data = []
+    json_path = os.path.join('./data', 'metadata.json')
+    if os.path.exists(json_path):
+        with open(json_path, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = [data]
+            except json.JSONDecodeError:
+                data = []
+    else:
+        os.makedirs(os.path.dirname(json_path), exist_ok=True)
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump([], f, ensure_ascii=False, indent=4)
+
     try:
         results = Search(req)
         res = []
-        index = 1
+        index = -1
         for video in results.videos:
-            res.append({
+            name = hash_json({
                 "title": video.title,
-                "url": video.watch_url,
                 "length": video.length,
                 "author": video.author,
                 "miniature": video.thumbnail_url,
-                "id": index,
             })
-            index += 1
-        return jsonify({"result": res}), 200
+            found = False
+            for track in data:
+                if track["name"] == f"{name}.m4a":
+                    found = True
+                    track["liked"] = True
+                    res.append(track)
+                    break
+
+            if not found:
+                res.append({
+                    "title": video.title,
+                    "url": video.watch_url,
+                    "length": video.length,
+                    "author": video.author,
+                    "miniature": video.thumbnail_url,
+                    "id": index,
+                    "liked": False,
+                })
+                index -= 1
+        return jsonify(res), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 200
 
