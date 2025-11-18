@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Heart, Ellipsis } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
+import CircularLoader from '../utils/CircularLoader';
 
 const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch, setTracks, setDraggedTrack, setDragging, setLikedTracks }) => {  
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const handleDragStart = (e) => {
     setDraggedTrack(track);
     setDragging(true);
@@ -33,18 +36,32 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onClick={() => {
-        playTrack(track.id);
         if (track.url) {
+          setIsDownloading(true);
           const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
           fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
             result1.json().then(result2 => {
-              setCurrentTrackObj(result2);
-              setProgress(0);
-              setIsPlaying(true);
-              setTrackList(trackSearch);
+              const prevTracks = [...trackSearch];
+              for (let i = 0; i < prevTracks.length; i++) {
+                if (prevTracks[i].url == track.url) {
+                  prevTracks[i] = result2;
+                }
+              }
+              setTracks(prevTracks);
+              setIsDownloading(false);
+              
+              if (result2?.id == currentTrackObj?.id && isPlaying) {
+                setIsPlaying(false);
+              } else {
+                setCurrentTrackObj(result2);
+                setProgress(0);
+                setIsPlaying(true);
+                setTrackList(trackSearch);
+              }
             });
           });
         } else {
+          playTrack(track.id);
           setCurrentTrackObj(track);
           setTrackList(trackSearch);
         }
@@ -88,7 +105,7 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
         justifyContent: 'center',
         flexShrink: 0
       }}>
-        {track?.id == currentTrackObj?.id && isPlaying ? <Pause size={20} /> : <Play size={20} />}
+        {isDownloading ? <CircularLoader size={80} color={'#8d67ab'}></CircularLoader> : track?.id == currentTrackObj?.id && isPlaying ? <Pause size={20} /> : <Play size={20} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track?.title}</div>

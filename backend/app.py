@@ -210,6 +210,49 @@ def update_playlist():
         json.dump(data, f, ensure_ascii=False, indent=4)
     return jsonify(pl), 200
 
+@app.route('/playlist/delete', methods=['DELETE'])
+def delete_track_from_playlist():
+    track = int(request.json.get('track', -1))
+    playlist_id = int(request.json.get('playlist_id', -1))
+    if (track == -1 or playlist_id == -1):
+        return "The given ID seems to be null", 404
+    
+    data = []
+    if os.path.exists('./data/playlists.json'):
+        with open('./data/playlists.json', 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = [data]
+            except json.JSONDecodeError:
+                data = []
+    else:
+        os.makedirs(os.path.dirname('./data/playlists.json'), exist_ok=True)
+        with open('./data/playlists.json', 'w', encoding='utf-8') as f:
+            temp = {}
+            temp["id"] = 0
+            temp["name"] = "Liked Songs"
+            temp["tracks"] = []
+            json.dump([temp], f, ensure_ascii=False, indent=4)
+
+    pl = None
+    found = False
+    for elt in data:
+        if elt["id"] == playlist_id:
+            found = True
+            if track in elt["tracks"]:
+                elt["tracks"].remove(track)
+                pl = elt["tracks"]
+    if not found:
+        return "The given ID does not correspond to an existing playlist: " + str(playlist_id), 404
+    if pl == None:
+        return "The given track is already present in the playlist !", 404
+
+    # Save updated data
+    with open('./data/playlists.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    return jsonify(pl), 200
+
 # Route to fetch video and download it
 @app.route('/fetch/video/<url>', methods=['GET'])
 async def fetch_video(url):
@@ -303,6 +346,7 @@ def search_video(req):
 
             if not found:
                 res.append({
+                    "name": f"{name}.m4a",
                     "title": video.title,
                     "url": video.watch_url,
                     "length": video.length,

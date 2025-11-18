@@ -38,23 +38,23 @@ const handleProgressChange = (e) => {
 
 
 const handleVolumeChange = (e) => {
-    let newVolume = parseInt(e.target.value);
-    if (isMuted) {
+  let newVolume = parseInt(e.target.value);
+  if (isMuted) {
     newVolume = 0;
-    }
-    setOldVolume(volume);
-    setVolume(newVolume);
+  }
+  setOldVolume(volume);
+  setVolume(newVolume);
 };
 
 const toggleMute = () => {
-    setIsMuted(!isMuted);
-    if (!isMuted) {
+  setIsMuted(!isMuted);
+  if (!isMuted) {
     setOldVolume(volume);
     setVolume(0);
-    } else {
+  } else {
     setVolume(oldVolume);
     setOldVolume(0);
-    }
+  }
 }
 const toggleRepeat = () => setRepeatMode((repeatMode + 1) % 3);
 

@@ -28,12 +28,13 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <button
             onClick={() => {
-              navigate('/');
-              fetch("http://localhost:4444/tracks").then(result1 => {
-                result1.json().then(result2 => {
-                  setTracks(result2);
+              if (navigate('/')) {
+                fetch("http://localhost:4444/tracks").then(result1 => {
+                  result1.json().then(result2 => {
+                    setTracks(result2);
+                  })
                 })
-              })
+              }
             }}
             style={{
               display: 'flex',
@@ -55,8 +56,9 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
           </button>
           <button
             onClick={() => {
-              navigate('/search');
-              setTracks([]);
+              if (navigate('/search')) {
+                setTracks([]);
+              }
             }}
             style={{
               display: 'flex',

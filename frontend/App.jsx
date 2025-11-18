@@ -6,6 +6,8 @@ import TrackItem from './components/TrackItem';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Music, Search } from 'lucide-react';
 import { formatTime } from './utils/helpers';
 import Player from './components/Player';
+import CircularProgressBar from './utils/CircularLoader';
+import CircularLoader from './utils/CircularLoader';
 
 
 function App() {
@@ -29,6 +31,7 @@ function App() {
   const [dragging, setDragging] = useState(false);
 
   const [trackList, setTrackList] = useState([]);
+  console.log(tracks);
   const [selectedPlaylist, setSelectedPlaylist] = useState([]);
 
 
@@ -49,12 +52,14 @@ function App() {
 
 
   const genres = [
+    /* TODO: Check ca, peut etre devoir 
     { name: 'Pop', colors: ['#e13300', '#dc148c'] },
     { name: 'Rock', colors: ['#27856a', '#1db954'] },
     { name: 'Hip-Hop', colors: ['#8400e7', '#e91429'] },
     { name: 'Electronic', colors: ['#1e3264', '#4687d6'] },
     { name: 'Jazz', colors: ['#e8115b', '#dc148c'] },
     { name: 'Classical', colors: ['#477d95', '#8d67ab'] }
+    */
   ];
 
   useEffect(() => {
@@ -63,8 +68,6 @@ function App() {
       setIsSearching(true);
       fetch(`http://localhost:4444/search/${searchQuery}`).then(result1 => {
         result1.json().then(result2 => {
-          console.log(tracks)
-          console.log(result2);
           setIsSearching(false);
           setTracks(result2);
         });
@@ -75,7 +78,6 @@ function App() {
   }, [searchQuery]);
 
 
-  console.log(tracks);
 
   useEffect(() => {
     fetch(`http://localhost:4444/tracks`).then(result1 => {
@@ -169,15 +171,40 @@ function App() {
     }
   };
 
-  console.log(likedTracks);
 
   const toggleLike = (trackId, justFetched=false) => {
-    let found = false;
     for (let i = 0; i < likedTracks.length; i++) {
       if (likedTracks[i].id == trackId) {
-        likedTracks.splice(i, 1);
-        found = true;
-        // TODO: Fetch delete + update playlists
+        const newLiked = [...likedTracks];
+        newLiked.splice(i, 1);
+        // Fetch delete + update playlists
+        fetch(`http://localhost:4444/playlist/delete`, {
+          method: "DELETE",
+          body: JSON.stringify({
+            track: trackId,
+            playlist_id: 0,
+          }),
+          headers: {
+            "Content-type": "application/json"
+          }
+        }).then(result1 => {
+          result1.json().then(result2 => {
+            fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
+              result3.json().then(result4 => {
+                const oldPlaylists = [...playlists];
+                for (let i = 0; i < oldPlaylists.length; i++) {
+                  if (oldPlaylists[i].id == 0) {
+                    oldPlaylists[i] = result4;
+                  }
+                }
+                if (!justFetched) {
+                  setLikedTracks(result4.tracks);
+                }
+                setPlaylists(oldPlaylists);
+              });
+            });
+          });
+        });
         return;
       }
     }
@@ -223,7 +250,11 @@ function App() {
   };
 
   const navigate = (path) => {
-    setCurrentPath(path);
+    if (currentPath != path) {
+      setCurrentPath(path);
+      return true;
+    }
+    return false;
   };
 
   const [playlistName, setPlaylistName] = useState('');
@@ -251,6 +282,7 @@ function App() {
       setPlaylistCreationPopUp(false);
     }
   };
+
 
   return (
     <>
@@ -364,14 +396,15 @@ function App() {
                   <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#b3b3b3' }} />
                   <input
                     type="text"
-                    placeholder="What do you want to listen to?"
+                    placeholder="What do you want to listen to ?"
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
                     }}
                     style={{
-                      width: '100%',
-                      padding: '12px 16px 12px 48px',
+                      width: '90%',
+                      right: "16px",
+                      padding: '12px 0px 12px 40px',
                       backgroundColor: '#fff',
                       color: '#000',
                       border: 'none',
@@ -384,7 +417,7 @@ function App() {
 
                 {searchQuery === '' ? (
                   <div>
-                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Browse all</h3>
+                    {/* <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>Browse all</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' }}>
                       {genres.map((genre) => (
                         <div
@@ -407,12 +440,13 @@ function App() {
                           <Music size={64} style={{ position: 'absolute', right: '-8px', bottom: '-8px', opacity: 0.6, transform: 'rotate(-25deg)' }} />
                         </div>
                       ))}
-                    </div>
+                    </div> */}
                   </div>
                 ) : (
                   <div>
                     <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px' }}>
-                      {tracks?.length && tracks.length > 0 ? `Found ${tracks.length} track${tracks.length > 1 ? 's' : ''}` : 'No results found'}
+                      {tracks?.length && tracks.length > 0 ? `Found ${tracks.length} track${tracks.length > 1 ? 's' : ''}` :
+                      isSearching ? <CircularLoader></CircularLoader> : 'No results found'}
                     </h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {tracks?.map(track => (
@@ -465,13 +499,14 @@ function App() {
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#282828'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       onClick={() => {
-                        navigate('/playlist');
-                        if (playlist.id != 0) {
-                          fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
-                            result1.json().then(result2 => {
-                              setSelectedPlaylist(result2);
+                        if (navigate('/playlist')) {
+                          if (playlist.id != 0) {
+                            fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
+                              result1.json().then(result2 => {
+                                setSelectedPlaylist(result2);
+                              });
                             });
-                          });
+                          }
                         }
                       }}
                     >

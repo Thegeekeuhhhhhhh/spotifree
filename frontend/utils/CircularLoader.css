@@ -1,0 +1,35 @@
+.circular-loader {
+  transform: rotate(-90deg); /* Starts the animation from top */
+  animation: rotate 1.5s linear infinite;
+}
+
+.background-circle {
+  opacity: 0.3; /* Lighten the background circle */
+}
+
+.loader-circle {
+  transform-origin: center;
+  stroke-linecap: round;
+  stroke-dasharray: 440; /* Set to circumference of circle */
+  animation: dash 1.5s ease-in-out infinite;
+}
+
+/* Animation for rotating the entire circle */
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation for the loader stroke */
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 440; /* Full circle */
+  }
+  50% {
+    stroke-dashoffset: 0; /* Fully drawn */
+  }
+  100% {
+    stroke-dashoffset: 440; /* Back to start */
+  }
+}
