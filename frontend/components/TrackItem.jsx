@@ -1,3 +1,5 @@
+// TODO: Downloading error represente l etat de telechargement d une chanson, passez le texte en rouge quand on a une erreur + peut etre mettre une snackbar
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Play, Pause, Heart, Ellipsis } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
@@ -5,6 +7,7 @@ import CircularLoader from '../utils/CircularLoader';
 
 const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch, setTracks, setDraggedTrack, setDragging, setLikedTracks }) => {  
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadingError, setDownloadingError] = useState(false);
 
   const handleDragStart = (e) => {
     setDraggedTrack(track);
@@ -36,34 +39,44 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onClick={() => {
+        let isOkReq = true;
         if (track.url) {
+          setDownloadingError(false);
           setIsDownloading(true);
           const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
           fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
             result1.json().then(result2 => {
-              const prevTracks = [...trackSearch];
-              for (let i = 0; i < prevTracks.length; i++) {
-                if (prevTracks[i].url == track.url) {
-                  prevTracks[i] = result2;
-                }
-              }
-              setTracks(prevTracks);
-              setIsDownloading(false);
-              
-              if (result2?.id == currentTrackObj?.id && isPlaying) {
-                setIsPlaying(false);
+              if (result2.error) {
+                setDownloadingError(true);
+                setIsDownloading(false);
+                isOkReq = false;
               } else {
-                setCurrentTrackObj(result2);
-                setProgress(0);
-                setIsPlaying(true);
-                setTrackList(trackSearch);
+                console.log(result2);
+                const prevTracks = [...trackSearch];
+                for (let i = 0; i < prevTracks.length; i++) {
+                  if (prevTracks[i].url == track.url) {
+                    prevTracks[i] = result2;
+                  }
+                }
+                setTracks(prevTracks);
+                setIsDownloading(false);
+                
+                if (result2?.id == currentTrackObj?.id && isPlaying) {
+                  setIsPlaying(false);
+                } else {
+                  setCurrentTrackObj(result2);
+                  setProgress(0);
+                  setIsPlaying(true);
+                  setTrackList(trackSearch);
+                }                      
               }
             });
           });
-        } else {
-          playTrack(track.id);
-          setCurrentTrackObj(track);
-          setTrackList(trackSearch);
+          if (!isOkReq) {
+            playTrack(track.id);
+            setCurrentTrackObj(track);
+            setTrackList(trackSearch);
+          }
         }
       }}
       style={{
@@ -108,7 +121,7 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
         {isDownloading ? <CircularLoader size={80} color={'#8d67ab'}></CircularLoader> : track?.id == currentTrackObj?.id && isPlaying ? <Pause size={20} /> : <Play size={20} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track?.title}</div>
+        <div style={{ fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: !downloadingError ? "white" : "red" }}>{track?.title}</div>
         <div style={{ fontSize: '14px', color: '#b3b3b3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track?.artist}</div>
       </div>
       <div style={{ fontSize: '14px', color: '#b3b3b3' }}>{track?.album}</div>
