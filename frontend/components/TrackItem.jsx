@@ -3,13 +3,13 @@ import { Play, Pause, Heart, Ellipsis } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
 import CircularLoader from '../utils/CircularLoader';
 
-const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch, setTracks, setDraggedTrack, setDragging, setLikedTracks }) => {  
+const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch, setTracks, setDraggedTrack, setDragging, setLikedTracks, setErrorMessage, setIsErrorMessage, }) => {  
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDragStart = (e) => {
     setDraggedTrack(track);
     setDragging(true);
-    e.dataTransfer.setData('text/plain', track.id);
+    e.dataTransfer.setData('text/plain', JSON.stringify(track));
     e.target.style.opacity = 0.5;
   };
 
@@ -121,7 +121,11 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
               result1.json().then(result2 => {
                 toggleLike(result2.id, true);
                 const prevTracks = [...trackSearch];
-                prevTracks.filter(e => e.id == track.id)[0].liked = true;
+                for (let i = 0; i < prevTracks.length; i++) {
+                  if (prevTracks[i].url == track.url) {
+                    prevTracks[i] = result2;
+                  }
+                }
                 setTracks(prevTracks);
                 setLikedTracks(prev => [...prev, result2]);
               });
