@@ -8,6 +8,10 @@ import { formatTime } from './utils/helpers';
 import Player from './components/Player';
 import CircularProgressBar from './utils/CircularLoader';
 import CircularLoader from './utils/CircularLoader';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Snackbar from '@mui/material/Snackbar';
 
 
 function App() {
@@ -38,6 +42,10 @@ function App() {
   const [playlists, setPlaylists] = useState([]);
 
   const [playlistCreationPopUp, setPlaylistCreationPopUp] = useState(false);
+  
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isErrorMessage, setIsErrorMessage] = useState(false);
+
 
 
 
@@ -77,6 +85,14 @@ function App() {
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
 
+  useEffect(() => {
+    for (let i = 0; i < playlists.length; i++) {
+      if (playlists[i].id == 0) {
+        setLikedTracks(playlists[i].tracks);
+        break;
+      }
+    }
+  }, [playlists]);
 
 
   useEffect(() => {
@@ -89,14 +105,16 @@ function App() {
     fetch(`http://localhost:4444/playlist/list`).then(result1 => {
       result1.json().then(result2 => {
         setPlaylists(result2);
-      });
-    });
-    fetch(`http://localhost:4444/playlist/get/0`).then(result1 => {
-      result1.json().then(result2 => {
-        setLikedTracks(result2.tracks);
+        fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
+          result3.json().then(result4 => {
+            setLikedTracks(result4.tracks);
+          });
+        });
       });
     });
   }, []);
+
+  console.log(likedTracks)
 
   useEffect(() => {
     if (isPlaying) {
@@ -209,6 +227,7 @@ function App() {
       }
     }
 
+    console.log("Classique")
     fetch(`http://localhost:4444/playlist/update`, {
       method: "POST",
       body: JSON.stringify({
@@ -348,6 +367,11 @@ function App() {
           tracks={tracks}
           dragging={dragging}
           setPlaylists={setPlaylists}
+          setLikedTracks={setLikedTracks}
+          toggleLike={toggleLike}
+          trackSearch={tracks}
+          setErrorMessage={setErrorMessage}
+          setIsErrorMessage={setIsErrorMessage}
         />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #5b247a 0%, #000 100%)', width: "100%", overflow: 'hidden' }}>
@@ -382,6 +406,8 @@ function App() {
                         setDragging={setDragging}
                         setTracks={setTracks}
                         setLikedTracks={setLikedTracks}
+                        setErrorMessage={setErrorMessage}
+                        setIsErrorMessage={setIsErrorMessage}
                       />
                     ))}
                   </div>
@@ -471,6 +497,8 @@ function App() {
                           setDragging={setDragging}
                           setTracks={setTracks}
                           setLikedTracks={setLikedTracks}
+                          setErrorMessage={setErrorMessage}
+                          setIsErrorMessage={setIsErrorMessage}
                         />
                       ))}
                     </div>
@@ -560,6 +588,8 @@ function App() {
                         setDragging={setDragging}
                         setTracks={() => {}}
                         setLikedTracks={setLikedTracks}
+                        setErrorMessage={setErrorMessage}
+                        setIsErrorMessage={setIsErrorMessage}
                       />
                     ))}
                   </div>
@@ -590,6 +620,16 @@ function App() {
             handleNext={handleNext}
             duration={duration}
             currentTime={progress}
+            setErrorMessage={setErrorMessage}
+            setIsErrorMessage={setIsErrorMessage}
+          />
+          <Snackbar
+            open={isErrorMessage}
+            onClose={() => {
+              setErrorMessage("");
+              setIsErrorMessage(false);
+            }}
+            message={errorMessage}
           />
         </div>
       </div>
