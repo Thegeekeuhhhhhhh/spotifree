@@ -16,7 +16,7 @@ const DropZone = ({ onDrop, name, tracksNumber }) => {
   );
 };
 
-const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp, setSelectedPlaylist, tracks, dragging, setPlaylists }) => {
+const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp, setSelectedPlaylist, tracks, dragging, setPlaylists, setLikedTracks, toggleLike, trackSearch, setErrorMessage, setIsErrorMessage, }) => {
   return (
     <div style={{ width: "240px", backgroundColor: '#000', padding: '24px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ marginBottom: '32px' }}>
@@ -116,27 +116,81 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
               <DropZone
                 key={playlist.id}
                 onDrop={(e) => {
-                  const droppedTrackId = e.dataTransfer.getData('text/plain');
-                  fetch(`http://localhost:4444/playlist/update`, {
-                    method: "POST",
-                    body: JSON.stringify({
-                      track: droppedTrackId,
-                      playlist_id: playlist.id,
-                    }),
-                    headers: {
-                      "Content-type": "application/json"
-                    }
-                  }).then(result1 => {
-                    result1.json().then(result2 => {
-                      const oldPlaylists = [...playlists];
-                      for (let i = 0; i < oldPlaylists.length; i++) {
-                        if (oldPlaylists[i].id == playlist.id) {
-                          oldPlaylists[i]["tracks"] = result2;
-                        }
+                  const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                  const droppedTrackId = data.id;
+                  console.log(data);
+                  
+                  if (data.url) {
+                    const match = data.url.match(/[?&]v=([^&]+)/)?.[1];
+                    fetch(`http://localhost:4444/fetch_dl/video/${match}`, {
+                      method: "POST",
+                      body: JSON.stringify({
+                        playlist_id: playlist.id,
+                      }),
+                      headers: {
+                        "Content-type": "application/json"
                       }
-                      setPlaylists(oldPlaylists);
+                    }).then(result1 => {
+                      result1.json().then(result2 => {
+                        if (playlist.id == 0) {
+                          toggleLike(result2.id, true);
+                          const prevTracks = [...trackSearch];
+                          for (let i = 0; i < prevTracks.length; i++) {
+                            if (prevTracks[i].url == data.url) {
+                              prevTracks[i] = result2;
+                            }
+                          }
+                          setTracks(prevTracks);
+                        }
+                        const oldPlaylists = [...playlists];
+                        for (let i = 0; i < oldPlaylists.length; i++) {
+                          if (oldPlaylists[i].id == playlist.id) {
+                            oldPlaylists[i]["tracks"].push(result2);
+                          }
+                        }
+                        setPlaylists(oldPlaylists);
+                      });
                     });
-                  });
+                  } else {
+                    console.log("Sidebar")
+                    fetch(`http://localhost:4444/playlist/update`, {
+                      method: "POST",
+                      body: JSON.stringify({
+                        track: droppedTrackId,
+                        playlist_id: playlist.id,
+                      }),
+                      headers: {
+                        "Content-type": "application/json"
+                      }
+                    }).then(result1 => {
+                      console.log(result1)
+                        if (result1.ok) {
+                        result1.json().then(result2 => {
+                          const oldPlaylists = [...playlists];
+                          for (let i = 0; i < oldPlaylists.length; i++) {
+                            if (oldPlaylists[i].id == playlist.id) {
+                              oldPlaylists[i]["tracks"] = result2;
+                            }
+                          }
+                          setPlaylists(oldPlaylists);
+                          if (playlist.id == 0) {
+                            fetch(`http://localhost:4444/playlist/get/0`).then(result1 => {
+                              result1.json().then(result2 => {
+                                setLikedTracks(result2.tracks);
+                              });
+                            });
+                          }
+                        });
+                      } else {
+                        result1.text().then(result2 => {
+                          setIsErrorMessage(true);
+                          setErrorMessage(result2);
+                        });
+                      }
+                    }).catch(err => {
+                      console.error(err);
+                    });
+                  }
                 }}
                 name={playlist.name}
                 tracksNumber={playlist.tracks?.length}
