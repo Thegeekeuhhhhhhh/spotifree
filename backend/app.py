@@ -52,6 +52,8 @@ async def update_metadata_list(json_path, new_data):
     # Save updated metadata
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+    
+    return new_data
 
 @app.route('/playlist/list', methods=['GET'])
 def get_playlists():
@@ -154,6 +156,7 @@ def create_playlist():
             temp["id"] = 0
             temp["name"] = "Liked Songs"
             temp["tracks"] = []
+            data.append(temp)
             json.dump([temp], f, ensure_ascii=False, indent=4)
 
     # Append new data
@@ -190,6 +193,7 @@ def update_playlist():
             temp["id"] = 0
             temp["name"] = "Liked Songs"
             temp["tracks"] = []
+            data.append(temp)
             json.dump([temp], f, ensure_ascii=False, indent=4)
 
     pl = None
@@ -233,6 +237,7 @@ def delete_track_from_playlist():
             temp["id"] = 0
             temp["name"] = "Liked Songs"
             temp["tracks"] = []
+            data.append(temp)
             json.dump([temp], f, ensure_ascii=False, indent=4)
 
     pl = None
@@ -284,6 +289,80 @@ async def fetch_video(url):
 
     # Update metadata asynchronously
     await update_metadata_list('./data/metadata.json', metadata)
+
+    return jsonify(metadata), 200
+
+# Route to fetch video, download it and add it to a given playlist
+@app.route('/fetch_dl/video/<url>', methods=['POST'])
+async def fetch_dl_video(url):
+    playlist_id = int(request.json.get('playlist_id', -1))
+    if (playlist_id == -1):
+        return "The given playlist ID seems to be null", 404
+    
+    data = []
+    if os.path.exists('./data/playlists.json'):
+        with open('./data/playlists.json', 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    data = [data]
+            except json.JSONDecodeError:
+                data = []
+    else:
+        os.makedirs(os.path.dirname('./data/playlists.json'), exist_ok=True)
+        with open('./data/playlists.json', 'w', encoding='utf-8') as f:
+            temp = {}
+            temp["id"] = 0
+            temp["name"] = "Liked Songs"
+            temp["tracks"] = []
+            data.append(temp)
+            json.dump([temp], f, ensure_ascii=False, indent=4)
+
+    
+    video_url = f"https://www.youtube.com/watch?v={url}"
+    video = YouTube(video_url)
+
+    name = hash_json({
+        "title": video.title,
+        "length": video.length,
+        "author": video.author,
+        "miniature": video.thumbnail_url,
+    })
+
+    metadata = {
+        "name": f"{name}.m4a",
+        "title": video.title,
+        "length": video.length,
+        "author": video.author,
+        "miniature": video.thumbnail_url,
+    }
+
+    video_path = f"./data/videos/{name}.m4a"
+
+    pl = None
+    found = False
+
+    if not os.path.exists(video_path):
+        # Asynchronously download the audio
+        await download_audio(video_url, "./data/videos", f"{name}.m4a")
+
+        # Update metadata asynchronously
+        new_data = await update_metadata_list('./data/metadata.json', metadata)    
+
+        for elt in data:
+            if elt["id"] == playlist_id:
+                found = True
+                elt["tracks"].append(new_data["id"])
+                pl = elt["tracks"]
+
+    if not found:
+        return "The given ID does not correspond to an existing playlist: " + str(playlist_id), 404
+    if pl == None:
+        return "The given track is already present in the playlist !", 404
+
+    # Save updated data
+    with open('./data/playlists.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
     return jsonify(metadata), 200
 
