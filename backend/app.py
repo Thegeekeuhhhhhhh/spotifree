@@ -75,7 +75,7 @@ def get_playlists():
             temp["tracks"] = []
             data.append(temp)
             json.dump([temp], f, ensure_ascii=False, indent=4)
-                
+
     return jsonify(data), 200
 
 @app.route('/playlist/get/<playlist_id>', methods=['GET'])
@@ -100,7 +100,7 @@ def get_playlist(playlist_id):
             json.dump([temp], f, ensure_ascii=False, indent=4)
         if playlist_id != 0:
             return "There is no playlist in the database", 404
-    
+
     playlist = None
     for p in playlists:
         if int(p["id"]) == int(playlist_id):
@@ -138,7 +138,7 @@ def create_playlist():
     name = request.json.get('name', '')
     if (name == ''):
         return "Given parameter seems to be null: " + str(name), 404
-    
+
     data = []
     new_data = {}
     if os.path.exists('./data/playlists.json'):
@@ -176,7 +176,7 @@ def update_playlist():
     playlist_id = int(request.json.get('playlist_id', -1))
     if (track == -1 or playlist_id == -1):
         return "The given ID seems to be null", 404
-    
+
     data = []
     if os.path.exists('./data/playlists.json'):
         with open('./data/playlists.json', 'r', encoding='utf-8') as f:
@@ -220,7 +220,7 @@ def delete_track_from_playlist():
     playlist_id = int(request.json.get('playlist_id', -1))
     if (track == -1 or playlist_id == -1):
         return "The given ID seems to be null", 404
-    
+
     data = []
     if os.path.exists('./data/playlists.json'):
         with open('./data/playlists.json', 'r', encoding='utf-8') as f:
@@ -261,36 +261,39 @@ def delete_track_from_playlist():
 # Route to fetch video and download it
 @app.route('/fetch/video/<url>', methods=['GET'])
 async def fetch_video(url):
-    video_url = f"https://www.youtube.com/watch?v={url}"
-    video = YouTube(video_url)
+    try:
+        video_url = f"https://www.youtube.com/watch?v={url}"
+        video = YouTube(video_url)
 
-    name = hash_json({
-        "title": video.title,
-        "length": video.length,
-        "author": video.author,
-        "miniature": video.thumbnail_url,
-    })
+        name = hash_json({
+            "title": video.title,
+            "length": video.length,
+            "author": video.author,
+            "miniature": video.thumbnail_url,
+        })
 
-    metadata = {
-        "name": f"{name}.m4a",
-        "title": video.title,
-        "length": video.length,
-        "author": video.author,
-        "miniature": video.thumbnail_url,
-    }
+        metadata = {
+            "name": f"{name}.m4a",
+            "title": video.title,
+            "length": video.length,
+            "author": video.author,
+            "miniature": video.thumbnail_url,
+        }
 
-    video_path = f"./data/videos/{name}.m4a"
-    
-    if os.path.exists(video_path):
+        video_path = f"./data/videos/{name}.m4a"
+
+        if os.path.exists(video_path):
+            return jsonify(metadata), 200
+
+        # Asynchronously download the audio
+        await download_audio(video_url, "./data/videos", f"{name}.m4a")
+
+        # Update metadata asynchronously
+        await update_metadata_list('./data/metadata.json', metadata)
+
         return jsonify(metadata), 200
-
-    # Asynchronously download the audio
-    await download_audio(video_url, "./data/videos", f"{name}.m4a")
-
-    # Update metadata asynchronously
-    await update_metadata_list('./data/metadata.json', metadata)
-
-    return jsonify(metadata), 200
+    except:
+        return jsonify({ "error": "A problem occured while fetching the video" }), 400
 
 # Route to fetch video, download it and add it to a given playlist
 @app.route('/fetch_dl/video/<url>', methods=['POST'])
