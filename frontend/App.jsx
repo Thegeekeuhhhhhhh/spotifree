@@ -34,7 +34,6 @@ function App() {
   const [dragging, setDragging] = useState(false);
 
   const [trackList, setTrackList] = useState([]);
-  console.log(tracks);
   const [selectedPlaylist, setSelectedPlaylist] = useState([]);
 
 
@@ -94,7 +93,7 @@ function App() {
   useEffect(() => {
     for (let i = 0; i < playlists.length; i++) {
       if (playlists[i].id == 0) {
-        setLikedTracks(playlists[i].tracks);
+        setLikedTracks(playlists[i].tracks.map(e => e.id));
         break;
       }
     }
@@ -105,9 +104,6 @@ function App() {
       setIsPlaying(true);
     }
   }, [currentTrackObj]);
-
-  console.log(playlists)
-
 
   useEffect(() => {
     fetch(`http://localhost:4444/tracks`).then(result1 => {
@@ -148,8 +144,6 @@ function App() {
     });
   }, []);
 
-  console.log("ACT", trackList);
-
   useEffect(() => {
     if (isPlaying) {
       const trackDuration = currentTrackObj?.length || 0;
@@ -183,9 +177,6 @@ function App() {
       return;
     }
     
-    console.log("WOW", trackList);
-    console.log("curr", currentTrackObj);
-
     let nextTrack;
     if (isShuffle) {
       nextTrack = Math.floor(Math.random() * trackList.length);
@@ -201,13 +192,7 @@ function App() {
       }
     }
 
-
-    console.log("TL: ", trackList);
-    console.log("autre: ", tracks)
-    console.log(nextTrack);
-
     const track = trackList?.filter(e => e.id == nextTrack)[0];
-    console.log("TRACK: ", track);
     if (track?.url) {
       const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
       setIsPlaying(false);
@@ -258,7 +243,6 @@ function App() {
     }
   };
 
-
   const toggleLike = (trackId, justFetched=false) => {
     for (let i = 0; i < likedTracks.length; i++) {
       if (likedTracks[i] == trackId) {
@@ -275,6 +259,7 @@ function App() {
         }).then(result1 => {
           if (result1.ok) {
             result1.json().then(result2 => {
+              setLikedTracks(result2);
               fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
                 if (result3.ok) {
                   result3.json().then(result4 => {
@@ -283,9 +268,6 @@ function App() {
                       if (oldPlaylists[i].id == 0) {
                         oldPlaylists[i] = result4;
                       }
-                    }
-                    if (!justFetched) {
-                      setLikedTracks(result4.tracks.map(e => e.id));
                     }
                     setPlaylists(oldPlaylists);
                   });
@@ -308,7 +290,6 @@ function App() {
       }
     }
 
-    console.log("Classique")
     fetch(`http://localhost:4444/playlist/update`, {
       method: "POST",
       body: JSON.stringify({
@@ -329,9 +310,6 @@ function App() {
                   if (oldPlaylists[i].id == 0) {
                     oldPlaylists[i] = result4;
                   }
-                }
-                if (!justFetched) {
-                  setLikedTracks(result4.tracks.map(e => e.id));
                 }
                 setPlaylists(oldPlaylists);
               });

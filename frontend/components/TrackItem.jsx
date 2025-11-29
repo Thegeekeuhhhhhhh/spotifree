@@ -39,8 +39,6 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onClick={() => {
-        console.log("Clicked");
-        console.log(track)
         if (track.url) {
           setDownloadingError(false);
           setIsDownloading(true);
@@ -50,7 +48,6 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
             if (result1.ok) {
               result1.json().then(result2 => {
                 const prevTracks = [...trackSearch];
-                console.log("HERE", prevTracks)
                 for (let i = 0; i < prevTracks.length; i++) {
                   if (prevTracks[i].url == track.url) {
                     prevTracks[i] = result2;
@@ -88,7 +85,6 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
         } else {
           playTrack(track.id);
           setCurrentTrackObj(track);
-          console.log("TS", trackSearch);
           setTrackList(trackSearch);
         }
       }}

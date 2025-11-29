@@ -125,7 +125,6 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                 onDrop={(e) => {
                   const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                   const droppedTrackId = data.id;
-                  console.log(data);
                   
                   if (data.url) {
                     const match = data.url.match(/[?&]v=([^&]+)/)?.[1];
@@ -166,7 +165,6 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                       }
                     });
                   } else {
-                    console.log("Sidebar")
                     fetch(`http://localhost:4444/playlist/update`, {
                       method: "POST",
                       body: JSON.stringify({
@@ -177,7 +175,6 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                         "Content-type": "application/json"
                       }
                     }).then(result1 => {
-                      console.log(result1);
                       if (result1.ok) {
                         result1.json().then(result2 => {
                           const oldPlaylists = [...playlists];
@@ -187,7 +184,6 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                             }
                           }
                           setPlaylists(oldPlaylists);
-                          console.log(oldPlaylists)
                           if (playlist.id == 0) {
                             fetch(`http://localhost:4444/playlist/get/0`).then(result1 => {
                               if (result1.ok) {
