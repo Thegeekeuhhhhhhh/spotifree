@@ -444,4 +444,5 @@ def search_video(req):
 
 # Run the app
 if __name__ == "__main__":
-    app.run(debug=True, port=4444)
+    # DEBUG: app.run(debug=True, port=4444)
+    app.run(port=4444)

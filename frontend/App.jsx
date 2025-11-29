@@ -229,6 +229,8 @@ function App() {
       setProgress(0);
     } else {
       let prevTrack;
+      // TODO: Think about a stack that memorizes all played songs
+      // Actual problem: If shuffle is on, you can't listen to previous song
       for (let i = 0; i < trackList?.length; i++) {
         if (trackList[i].id == currentTrackObj.id) {
           if (i == 0) {
@@ -238,8 +240,36 @@ function App() {
           }
         }
       }
-      setCurrentTrackObj(trackList?.filter(e => e.id == prevTrack)[0]);
-      setProgress(0);
+      const track = trackList?.filter(e => e.id == prevTrack)[0];
+      if (track?.url) {
+        const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
+        setIsPlaying(false);
+        fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
+          if (result1.ok) {
+            result1.json().then(result2 => {
+              const prevTracks = [...tracks];
+              for (let i = 0; i < prevTracks.length; i++) {
+                if (prevTracks[i].url == track.url) {
+                  prevTracks[i] = result2;
+                }
+              }
+              setTracks(prevTracks);
+              setTrackList(prevTracks);
+              setCurrentTrackObj(result2);
+              // setIsPlaying(true);
+              setProgress(0);
+            });
+          } else {
+            result1.text().then(result2 => {
+              setIsErrorMessage(true);
+              setErrorMessage(result2);
+            });
+          }
+        });
+      } else {
+        setCurrentTrackObj(track);
+        setProgress(0);
+      }
     }
   };
 

@@ -19,7 +19,7 @@ function createWindow () {
       contextIsolation: true, // for security
     }
   });
-  win.webContents.openDevTools();
+  // DEBUG: win.webContents.openDevTools();
 
   win.loadFile(path.join(__dirname, 'dist', 'index.html'));
 }
