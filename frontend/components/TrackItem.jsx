@@ -5,7 +5,7 @@ import { Play, Pause, Heart, Ellipsis } from 'lucide-react';
 import { formatTime } from '../utils/helpers';
 import CircularLoader from '../utils/CircularLoader';
 
-const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, setTrackList, trackSearch, setTracks, setDraggedTrack, setDragging, setLikedTracks, setErrorMessage, setIsErrorMessage, }) => {  
+const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volume, currentTrackObj, setCurrentTrackObj, currentTime, setProgress, setIsPlaying, trackList, setTrackList, trackSearch, setTracks, setDraggedTrack, setDragging, setLikedTracks, setErrorMessage, setIsErrorMessage, }) => {  
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadingError, setDownloadingError] = useState(false);
 
@@ -39,26 +39,34 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onClick={() => {
-        let isOkReq = true;
+        console.log("Clicked");
+        console.log(track)
         if (track.url) {
           setDownloadingError(false);
           setIsDownloading(true);
           const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
+          setIsPlaying(false);
           fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
-            result1.json().then(result2 => {
-              if (result2.error) {
-                setDownloadingError(true);
-                setIsDownloading(false);
-                isOkReq = false;
-              } else {
-                console.log(result2);
+            if (result1.ok) {
+              result1.json().then(result2 => {
                 const prevTracks = [...trackSearch];
+                console.log("HERE", prevTracks)
                 for (let i = 0; i < prevTracks.length; i++) {
                   if (prevTracks[i].url == track.url) {
                     prevTracks[i] = result2;
+                    setTracks(prevTracks);
+
+                    // Can be replaced by post comment
+                    setTrackList(prevTracks);
+                    // if (trackList?.length > i && trackList[i].url == track.url) {
+                    //   const prevTrackList = [...trackSearch];
+                    //   prevTrackList[i] = result2;
+                    //   setTrackList(prevTrackList);
+                    // }
+                    break;
                   }
                 }
-                setTracks(prevTracks);
+
                 setIsDownloading(false);
                 
                 if (result2?.id == currentTrackObj?.id && isPlaying) {
@@ -67,16 +75,21 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
                   setCurrentTrackObj(result2);
                   setProgress(0);
                   setIsPlaying(true);
-                  setTrackList(trackSearch);
-                }                      
-              }
-            });
+                  setTrackList(prevTracks);
+                }
+              });
+            } else {
+              result1.text().then(result2 => {
+                setIsErrorMessage(true);
+                setErrorMessage(result2);
+              });
+            }
           });
-          if (!isOkReq) {
-            playTrack(track.id);
-            setCurrentTrackObj(track);
-            setTrackList(trackSearch);
-          }
+        } else {
+          playTrack(track.id);
+          setCurrentTrackObj(track);
+          console.log("TS", trackSearch);
+          setTrackList(trackSearch);
         }
       }}
       style={{
@@ -130,18 +143,28 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
           e.stopPropagation();
           if (track?.url) {
             const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
+            setIsPlaying(false);
             fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
-              result1.json().then(result2 => {
-                toggleLike(result2.id, true);
-                const prevTracks = [...trackSearch];
-                for (let i = 0; i < prevTracks.length; i++) {
-                  if (prevTracks[i].url == track.url) {
-                    prevTracks[i] = result2;
+              if (result1.ok) {
+                result1.json().then(result2 => {
+                  toggleLike(result2.id, true);
+                  const prevTracks = [...trackSearch];
+                  for (let i = 0; i < prevTracks.length; i++) {
+                    if (prevTracks[i].url == track.url) {
+                      prevTracks[i] = result2;
+                    }
                   }
-                }
-                setTracks(prevTracks);
-                setLikedTracks(prev => [...prev, result2]);
-              });
+                  setTracks(prevTracks);
+                  setTrackList(prevTracks);
+                  setLikedTracks(prev => [...prev, result2.id]);
+                  setIsPlaying(true);
+                });
+              } else {
+                result1.text().then(result2 => {
+                  setIsErrorMessage(true);
+                  setErrorMessage(result2);
+                });
+              }
             });
           } else {
             toggleLike(track.id);
@@ -151,8 +174,8 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
       >
         <Heart
           size={20}
-          style={{ color: likedTracks.filter(e => e.id == track?.id).length > 0 || track?.liked ? '#1db954' : '#b3b3b3' }}
-          fill={likedTracks.filter(e => e.id == track?.id).length > 0 || track?.liked ? '#1db954' : 'none'}
+          style={{ color: likedTracks.filter(e => e == track?.id).length > 0 || track?.liked ? '#1db954' : '#b3b3b3' }}
+          fill={likedTracks.filter(e => e == track?.id).length > 0 || track?.liked ? '#1db954' : 'none'}
         />
       </button>
       <button onClick={() => toggleLike(currentTrackObj?.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>

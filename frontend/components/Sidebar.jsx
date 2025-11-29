@@ -16,7 +16,7 @@ const DropZone = ({ onDrop, name, tracksNumber }) => {
   );
 };
 
-const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp, setSelectedPlaylist, tracks, dragging, setPlaylists, setLikedTracks, toggleLike, trackSearch, setErrorMessage, setIsErrorMessage, }) => {
+const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreationPopUp, setSelectedPlaylist, tracks, dragging, setPlaylists, setLikedTracks, toggleLike, trackSearch, setErrorMessage, setIsErrorMessage, setTrackList }) => {
   return (
     <div style={{ width: "240px", backgroundColor: '#000', padding: '24px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       <div style={{ marginBottom: '32px' }}>
@@ -30,9 +30,16 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
             onClick={() => {
               if (navigate('/')) {
                 fetch("http://localhost:4444/tracks").then(result1 => {
-                  result1.json().then(result2 => {
-                    setTracks(result2);
-                  })
+                  if (result1.ok) {
+                    result1.json().then(result2 => {
+                      setTracks(result2);
+                    });
+                  } else {
+                    result1.text().then(result2 => {
+                      setIsErrorMessage(true);
+                      setErrorMessage(result2);
+                    });
+                  }
                 })
               }
             }}
@@ -131,9 +138,11 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                         "Content-type": "application/json"
                       }
                     }).then(result1 => {
-                      result1.json().then(result2 => {
-                        if (playlist.id == 0) {
-                          toggleLike(result2.id, true);
+                      if (result1.ok) {
+                        result1.json().then(result2 => {
+                          if (playlist.id == 0) {
+                            toggleLike(result2.id, true);
+                          }
                           const prevTracks = [...trackSearch];
                           for (let i = 0; i < prevTracks.length; i++) {
                             if (prevTracks[i].url == data.url) {
@@ -141,15 +150,20 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                             }
                           }
                           setTracks(prevTracks);
-                        }
-                        const oldPlaylists = [...playlists];
-                        for (let i = 0; i < oldPlaylists.length; i++) {
-                          if (oldPlaylists[i].id == playlist.id) {
-                            oldPlaylists[i]["tracks"].push(result2);
+                          const oldPlaylists = [...playlists];
+                          for (let i = 0; i < oldPlaylists.length; i++) {
+                            if (oldPlaylists[i].id == playlist.id) {
+                              oldPlaylists[i]["tracks"].push(result2.id);
+                            }
                           }
-                        }
-                        setPlaylists(oldPlaylists);
-                      });
+                          setPlaylists(oldPlaylists);
+                        });
+                      } else {
+                        result1.text().then(result2 => {
+                          setIsErrorMessage(true);
+                          setErrorMessage(result2);
+                        });
+                      }
                     });
                   } else {
                     console.log("Sidebar")
@@ -163,8 +177,8 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                         "Content-type": "application/json"
                       }
                     }).then(result1 => {
-                      console.log(result1)
-                        if (result1.ok) {
+                      console.log(result1);
+                      if (result1.ok) {
                         result1.json().then(result2 => {
                           const oldPlaylists = [...playlists];
                           for (let i = 0; i < oldPlaylists.length; i++) {
@@ -173,11 +187,19 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                             }
                           }
                           setPlaylists(oldPlaylists);
+                          console.log(oldPlaylists)
                           if (playlist.id == 0) {
                             fetch(`http://localhost:4444/playlist/get/0`).then(result1 => {
-                              result1.json().then(result2 => {
-                                setLikedTracks(result2.tracks);
-                              });
+                              if (result1.ok) {
+                                result1.json().then(result2 => {
+                                  setLikedTracks(result2.tracks.map(e => e.id));
+                                });
+                              } else {
+                                result1.text().then(result2 => {
+                                  setIsErrorMessage(true);
+                                  setErrorMessage(result2);
+                                });
+                              }
                             });
                           }
                         });
@@ -187,8 +209,6 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                           setErrorMessage(result2);
                         });
                       }
-                    }).catch(err => {
-                      console.error(err);
                     });
                   }
                 }}
@@ -200,9 +220,16 @@ const Sidebar = ({ currentPath, navigate, playlists, setTracks, setPlaylistCreat
                 setSelectedPlaylist(playlist);
                 setTracks(playlist.tracks);
                 fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
-                  result1.json().then(result2 => {
-                    setSelectedPlaylist(result2);
-                  });
+                  if (result1.ok) {
+                    result1.json().then(result2 => {
+                      setSelectedPlaylist(result2);
+                    });
+                  } else {
+                    result1.text().then(result2 => {
+                      setIsErrorMessage(true);
+                      setErrorMessage(result2);
+                    });
+                  }
                 });
               }}
               key={playlist.id} style={{ color: '#b3b3b3', cursor: 'pointer' }}>

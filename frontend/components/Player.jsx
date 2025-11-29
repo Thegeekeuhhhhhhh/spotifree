@@ -99,8 +99,8 @@ return (
         <button onClick={() => toggleLike(currentTrackObj?.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}>
           <Heart
             size={24}
-            style={{ color: likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : '#b3b3b3' }}
-            fill={likedTracks.filter(e => e.id == currentTrackObj?.id).length > 0 ? '#1db954' : 'none'}
+            style={{ color: likedTracks.filter(e => e == currentTrackObj?.id).length > 0 ? '#1db954' : '#b3b3b3' }}
+            fill={likedTracks.filter(e => e == currentTrackObj?.id).length > 0 ? '#1db954' : 'none'}
           />
         </button>
         </div>

@@ -17,7 +17,6 @@ import Snackbar from '@mui/material/Snackbar';
 function App() {
   const [currentPath, setCurrentPath] = useState('/');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
   const [currentTrackObj, setCurrentTrackObj] = useState(null);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(10);
@@ -75,10 +74,17 @@ function App() {
     const delayDebounce = setTimeout(() => {
       setIsSearching(true);
       fetch(`http://localhost:4444/search/${searchQuery}`).then(result1 => {
-        result1.json().then(result2 => {
-          setIsSearching(false);
-          setTracks(result2);
-        });
+        if (result1.ok) {
+          result1.json().then(result2 => {
+            setIsSearching(false);
+            setTracks(result2);
+          });
+        } else {
+          result1.text().then(result2 => {
+            setIsErrorMessage(true);
+            setErrorMessage(result2);
+          });
+        }
       });
     }, 500);
 
@@ -94,27 +100,55 @@ function App() {
     }
   }, [playlists]);
 
+  useEffect(() => {
+    if (currentTrackObj?.id) {
+      setIsPlaying(true);
+    }
+  }, [currentTrackObj]);
+
+  console.log(playlists)
+
 
   useEffect(() => {
     fetch(`http://localhost:4444/tracks`).then(result1 => {
-      result1.json().then(result2 => {
-        setTracks(result2);
-        setTrackList(result2);
-      });
+      if (result1.ok) {
+        result1.json().then(result2 => {
+          setTracks(result2);
+        });
+      } else {
+        result1.text().then(result2 => {
+          setIsErrorMessage(true);
+          setErrorMessage(result2);
+        });
+      }
     });
     fetch(`http://localhost:4444/playlist/list`).then(result1 => {
-      result1.json().then(result2 => {
-        setPlaylists(result2);
-        fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
-          result3.json().then(result4 => {
-            setLikedTracks(result4.tracks);
+      if (result1.ok) {
+        result1.json().then(result2 => {
+          setPlaylists(result2);
+          fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
+            if (result3.ok) {
+              result3.json().then(result4 => {
+                setLikedTracks(result4.tracks.map(e => e.id));
+              });
+            } else {
+              result3.text().then(result4 => {
+                setIsErrorMessage(true);
+                setErrorMessage(result4);
+              });
+            }
           });
         });
-      });
+      } else {
+        result1.text().then(result2 => {
+          setIsErrorMessage(true);
+          setErrorMessage(result2);
+        });
+      }
     });
   }, []);
 
-  console.log(likedTracks)
+  console.log("ACT", trackList);
 
   useEffect(() => {
     if (isPlaying) {
@@ -149,6 +183,9 @@ function App() {
       return;
     }
     
+    console.log("WOW", trackList);
+    console.log("curr", currentTrackObj);
+
     let nextTrack;
     if (isShuffle) {
       nextTrack = Math.floor(Math.random() * trackList.length);
@@ -163,10 +200,43 @@ function App() {
         }
       }
     }
-    
-    setCurrentTrack(nextTrack);
-    setCurrentTrackObj(trackList?.filter(e => e.id == nextTrack)[0]);
-    setProgress(0);
+
+
+    console.log("TL: ", trackList);
+    console.log("autre: ", tracks)
+    console.log(nextTrack);
+
+    const track = trackList?.filter(e => e.id == nextTrack)[0];
+    console.log("TRACK: ", track);
+    if (track?.url) {
+      const match = track.url.match(/[?&]v=([^&]+)/)?.[1];
+      setIsPlaying(false);
+      fetch(`http://localhost:4444/fetch/video/${match}`).then(result1 => {
+        if (result1.ok) {
+          result1.json().then(result2 => {
+            const prevTracks = [...tracks];
+            for (let i = 0; i < prevTracks.length; i++) {
+              if (prevTracks[i].url == track.url) {
+                prevTracks[i] = result2;
+              }
+            }
+            setTracks(prevTracks);
+            setTrackList(prevTracks);
+            setCurrentTrackObj(result2);
+            // setIsPlaying(true);
+            setProgress(0);
+          });
+        } else {
+          result1.text().then(result2 => {
+            setIsErrorMessage(true);
+            setErrorMessage(result2);
+          });
+        }
+      });
+    } else {
+      setCurrentTrackObj(track);
+      setProgress(0);
+    }
   };
 
   const handlePrevious = () => {
@@ -183,7 +253,6 @@ function App() {
           }
         }
       }
-      setCurrentTrack(prevTrack);
       setCurrentTrackObj(trackList?.filter(e => e.id == prevTrack)[0]);
       setProgress(0);
     }
@@ -192,9 +261,7 @@ function App() {
 
   const toggleLike = (trackId, justFetched=false) => {
     for (let i = 0; i < likedTracks.length; i++) {
-      if (likedTracks[i].id == trackId) {
-        const newLiked = [...likedTracks];
-        newLiked.splice(i, 1);
+      if (likedTracks[i] == trackId) {
         // Fetch delete + update playlists
         fetch(`http://localhost:4444/playlist/delete`, {
           method: "DELETE",
@@ -206,22 +273,36 @@ function App() {
             "Content-type": "application/json"
           }
         }).then(result1 => {
-          result1.json().then(result2 => {
-            fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
-              result3.json().then(result4 => {
-                const oldPlaylists = [...playlists];
-                for (let i = 0; i < oldPlaylists.length; i++) {
-                  if (oldPlaylists[i].id == 0) {
-                    oldPlaylists[i] = result4;
-                  }
+          if (result1.ok) {
+            result1.json().then(result2 => {
+              fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
+                if (result3.ok) {
+                  result3.json().then(result4 => {
+                    const oldPlaylists = [...playlists];
+                    for (let i = 0; i < oldPlaylists.length; i++) {
+                      if (oldPlaylists[i].id == 0) {
+                        oldPlaylists[i] = result4;
+                      }
+                    }
+                    if (!justFetched) {
+                      setLikedTracks(result4.tracks.map(e => e.id));
+                    }
+                    setPlaylists(oldPlaylists);
+                  });
+                } else {
+                  result3.text().then(result4 => {
+                    setIsErrorMessage(true);
+                    setErrorMessage(result4);
+                  });
                 }
-                if (!justFetched) {
-                  setLikedTracks(result4.tracks);
-                }
-                setPlaylists(oldPlaylists);
               });
             });
-          });
+          } else {
+            result1.text().then(result2 => {
+              setIsErrorMessage(true);
+              setErrorMessage(result2);
+            });
+          }
         });
         return;
       }
@@ -238,22 +319,36 @@ function App() {
         "Content-type": "application/json"
       }
     }).then(result1 => {
-      result1.json().then(result2 => {
-        fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
-          result3.json().then(result4 => {
-            const oldPlaylists = [...playlists];
-            for (let i = 0; i < oldPlaylists.length; i++) {
-              if (oldPlaylists[i].id == 0) {
-                oldPlaylists[i] = result4;
-              }
+      if (result1.ok) {
+        result1.json().then(result2 => {
+          fetch(`http://localhost:4444/playlist/get/0`).then(result3 => {
+            if (result3.ok) {
+              result3.json().then(result4 => {
+                const oldPlaylists = [...playlists];
+                for (let i = 0; i < oldPlaylists.length; i++) {
+                  if (oldPlaylists[i].id == 0) {
+                    oldPlaylists[i] = result4;
+                  }
+                }
+                if (!justFetched) {
+                  setLikedTracks(result4.tracks.map(e => e.id));
+                }
+                setPlaylists(oldPlaylists);
+              });
+            } else {
+              result3.text().then(result4 => {
+                setIsErrorMessage(true);
+                setErrorMessage(result4);
+              });
             }
-            if (!justFetched) {
-              setLikedTracks(result4.tracks);
-            }
-            setPlaylists(oldPlaylists);
           });
         });
-      });
+      } else {
+        result1.text().then(result2 => {
+          setIsErrorMessage(true);
+          setErrorMessage(result2);
+        });
+      }
     });
   };
 
@@ -261,7 +356,6 @@ function App() {
     if (isPlaying && id == currentTrackObj?.id) {
       setIsPlaying(false);
     } else {
-      setCurrentTrack(id);
       setCurrentTrackObj(trackList?.filter(e => e.id == id)[0]);
       setProgress(0);
       setIsPlaying(true);
@@ -290,12 +384,19 @@ function App() {
           "Content-type": "application/json"
         }
       }).then(result1 => {
-        result1.json().then(result2 => {
-          setPlaylists(prev => [
-            ...prev,
-            result2,
-          ]);
-        });
+        if (result1.ok) {
+          result1.json().then(result2 => {
+            setPlaylists(prev => [
+              ...prev,
+              result2,
+            ]);
+          });
+        } else {
+          result1.text().then(result2 => {
+            setIsErrorMessage(true);
+            setErrorMessage(result2);
+          });
+        }
       });
       setPlaylistName('');
       setPlaylistCreationPopUp(false);
@@ -372,6 +473,7 @@ function App() {
           trackSearch={tracks}
           setErrorMessage={setErrorMessage}
           setIsErrorMessage={setIsErrorMessage}
+          setTrackList={setTrackList}
         />
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #5b247a 0%, #000 100%)', width: "100%", overflow: 'hidden' }}>
@@ -388,7 +490,6 @@ function App() {
                       <TrackItem
                         key={track.id}
                         track={track}
-                        currentTrack={currentTrack}
                         isPlaying={isPlaying}
                         playTrack={playTrack}
                         toggleLike={toggleLike}
@@ -400,6 +501,7 @@ function App() {
                         isSearching={isSearching}
                         setProgress={setProgress}
                         setIsPlaying={setIsPlaying}
+                        trackList={trackList}
                         setTrackList={setTrackList}
                         trackSearch={tracks}
                         setDraggedTrack={setDraggedTrack}
@@ -479,7 +581,6 @@ function App() {
                         <TrackItem
                           key={track.id}
                           track={track}
-                          currentTrack={currentTrack}
                           isPlaying={isPlaying}
                           playTrack={playTrack}
                           toggleLike={toggleLike}
@@ -491,6 +592,7 @@ function App() {
                           isSearching={isSearching}
                           setProgress={setProgress}
                           setIsPlaying={setIsPlaying}
+                          trackList={trackList}
                           setTrackList={setTrackList}
                           trackSearch={tracks}
                           setDraggedTrack={setDraggedTrack}
@@ -530,9 +632,16 @@ function App() {
                         if (navigate('/playlist')) {
                           if (playlist.id != 0) {
                             fetch(`http://localhost:4444/playlist/get/${playlist.id}`).then(result1 => {
-                              result1.json().then(result2 => {
-                                setSelectedPlaylist(result2);
-                              });
+                              if (result1.ok) {
+                                result1.json().then(result2 => {
+                                  setSelectedPlaylist(result2);
+                                });
+                              } else {
+                                result1.text().then(result2 => {
+                                  setIsErrorMessage(true);
+                                  setErrorMessage(result2);
+                                });
+                              }
                             });
                           }
                         }
@@ -570,7 +679,6 @@ function App() {
                       <TrackItem
                         key={track.id}
                         track={track}
-                        currentTrack={currentTrack}
                         isPlaying={isPlaying}
                         playTrack={playTrack}
                         toggleLike={toggleLike}
@@ -582,6 +690,7 @@ function App() {
                         isSearching={isSearching}
                         setProgress={setProgress}
                         setIsPlaying={setIsPlaying}
+                        trackList={trackList}
                         setTrackList={setTrackList}
                         trackSearch={[...selectedPlaylist.tracks]}
                         setDraggedTrack={setDraggedTrack}
@@ -625,6 +734,7 @@ function App() {
           />
           <Snackbar
             open={isErrorMessage}
+            autoHideDuration={4000}
             onClose={() => {
               setErrorMessage("");
               setIsErrorMessage(false);
