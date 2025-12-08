@@ -49,7 +49,7 @@ jobs:
         path: ./dist/Spotifree.exe
 
     - name: ls
-      run: dir
+      run: dir ./release
 
     - name: tree
-      run: tree
+      run: tree ./release

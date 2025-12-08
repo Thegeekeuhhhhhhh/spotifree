@@ -15,7 +15,7 @@
     "preview": "vite preview",
     "electron:dev": "npm run build && python -m PyInstaller --onefile .\\backend\\app.py --distpath .\\backend\\ && npm start",
     "electron:build": "npm run build && python -m PyInstaller --onefile .\\backend\\app.py --distpath .\\backend\\ && electron-builder",
-    "ci-build": "npm run build && electron-builder",
+    "ci-build": "npm run build && python -m PyInstaller --onefile ./backend/app.py --distpath ./backend && electron-builder",
     "start": "electron .",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -r https://github.com/Thegeekeuhhhhhhh/spotifree.git"
