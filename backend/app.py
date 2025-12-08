@@ -449,15 +449,4 @@ def search_video(req):
 if __name__ == "__main__":
     print("Running server on 4444")
     # DEBUG: app.run(debug=True, port=4444)
-    from waitress import serve
-    serve(app, host="localhost", port=4444)
-    # app.run(port=4444)
-
-
-
-
-
-
-
-
-
+    app.run(port=4444)
