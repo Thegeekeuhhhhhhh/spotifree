@@ -46,7 +46,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: spotifree-executable
-        path: ./dist/Spotifree.exe
+        path: "./release/Spotifree Setup 1.0.0.exe"
 
     - name: ls
       run: dir ./release
