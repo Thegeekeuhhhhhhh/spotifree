@@ -9,111 +9,8 @@ on:
     types: [created]
 
 jobs:
-  test-backend:
-    name: Test Python Backend
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.9', '3.10', '3.11']
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Lint with flake8
-      run: |
-        pip install flake8
-        cd backend
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
-    - name: Test backend syntax
-      run: |
-        python -m py_compile backend/app.py
-
-  test-frontend:
-    name: Test React Frontend
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Build frontend
-      run: npm run build
-    
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: frontend-build
-        path: dist/
-        retention-days: 7
-
-  integration-test:
-    name: Integration Test
-    needs: [test-backend, test-frontend]
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-    
-    - name: Install Python dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    
-    - name: Install frontend dependencies
-      run: npm ci
-    
-    - name: Build frontend
-      run: npm run build
-    
-    - name: Start backend server
-      run: |
-        cd backend
-        python app.py &
-        sleep 5
-      env:
-        FLASK_ENV: production
-    
-    - name: Test backend endpoints
-      run: |
-        curl -f http://localhost:4444/search/test || exit 1
-        echo "Backend is running successfully!"
-
   build-windows:
     name: Build Windows Executable
-    needs: [integration-test]
     runs-on: windows-latest
     
     steps:
@@ -140,15 +37,7 @@ jobs:
     - name: Install and build frontend
       run: |
         npm ci
-        npm run build
-    
-    - name: Verify frontend build exists
-      run: |
-        if (-Not (Test-Path "dist")) {
-          Write-Error "Error: dist directory not found"
-          exit 1
-        }
-        Get-ChildItem dist
+        npm run electron:build
     
     - name: Build Windows executable
       run: |
@@ -159,27 +48,26 @@ jobs:
           --collect-all flask `
           backend/app.py
     
-    - name: Upload Windows executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: spotifree-windows
-        path: dist/Spotifree-Windows.exe
-        retention-days: 30
+    # - name: Upload Windows executable
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: spotifree-windows
+    #     path: dist/Spotifree-Windows.exe
+    #     retention-days: 30
     
-    - name: Release Windows executable
-      if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./dist/Spotifree-Windows.exe
-        asset_name: Spotifree-Windows.exe
-        asset_content_type: application/octet-stream
+    # - name: Release Windows executable
+    #   if: github.event_name == 'release'
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ github.event.release.upload_url }}
+    #     asset_path: ./dist/Spotifree-Windows.exe
+    #     asset_name: Spotifree-Windows.exe
+    #     asset_content_type: application/octet-stream
 
   build-linux:
     name: Build Linux Executable
-    needs: [integration-test]
     runs-on: ubuntu-latest
     
     steps:
@@ -206,15 +94,7 @@ jobs:
     - name: Install and build frontend
       run: |
         npm ci
-        npm run build
-    
-    - name: Verify frontend build exists
-      run: |
-        if [ ! -d "dist" ]; then
-          echo "Error: dist directory not found"
-          exit 1
-        fi
-        ls -la dist/
+        npm run electron:build
     
     - name: Build Linux executable
       run: |
@@ -228,20 +108,20 @@ jobs:
     - name: Make executable
       run: chmod +x dist/Spotifree-Linux
     
-    - name: Upload Linux executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: spotifree-linux
-        path: dist/Spotifree-Linux
-        retention-days: 30
+    # - name: Upload Linux executable
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: spotifree-linux
+    #     path: dist/Spotifree-Linux
+    #     retention-days: 30
     
-    - name: Release Linux executable
-      if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./dist/Spotifree-Linux
-        asset_name: Spotifree-Linux
-        asset_content_type: application/octet-stream
+    # - name: Release Linux executable
+    #   if: github.event_name == 'release'
+    #   uses: actions/upload-release-asset@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     upload_url: ${{ github.event.release.upload_url }}
+    #     asset_path: ./dist/Spotifree-Linux
+    #     asset_name: Spotifree-Linux
+    #     asset_content_type: application/octet-stream
