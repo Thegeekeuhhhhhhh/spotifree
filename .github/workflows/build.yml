@@ -15,8 +15,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GH_TOKEN }}
     
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -40,6 +38,8 @@ jobs:
       run: npm install
     
     - name: Build Windows executable
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: npm run ci-build
 
   build-linux:
@@ -48,8 +48,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GH_TOKEN }}
     
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -73,6 +71,8 @@ jobs:
       run: npm install
     
     - name: Build Linux executable
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
       run: npm run ci-build
     
     - name: Make executable
