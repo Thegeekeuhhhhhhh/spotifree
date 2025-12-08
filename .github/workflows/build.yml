@@ -43,7 +43,7 @@ jobs:
       run: npm run ci-build
 
     - name: Upload Windows Executable as Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: spotifree-executable
         path: ./Spotifree.exe
