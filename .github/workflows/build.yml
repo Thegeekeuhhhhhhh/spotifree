@@ -34,37 +34,9 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     
-    - name: Install and build frontend
-      run: |
-        npm ci
-        npm run ci-build
-    
     - name: Build Windows executable
       run: |
-        pyinstaller --onefile --name Spotifree-Windows `
-          --add-data "dist;dist" `
-          --hidden-import=flask `
-          --hidden-import=flask_cors `
-          --collect-all flask `
-          backend/app.py
-    
-    # - name: Upload Windows executable
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: spotifree-windows
-    #     path: dist/Spotifree-Windows.exe
-    #     retention-days: 30
-    
-    # - name: Release Windows executable
-    #   if: github.event_name == 'release'
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     upload_url: ${{ github.event.release.upload_url }}
-    #     asset_path: ./dist/Spotifree-Windows.exe
-    #     asset_name: Spotifree-Windows.exe
-    #     asset_content_type: application/octet-stream
+        npm run ci-build
 
   build-linux:
     name: Build Linux Executable
@@ -91,37 +63,9 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     
-    - name: Install and build frontend
-      run: |
-        npm ci
-        npm run ci-build
-    
     - name: Build Linux executable
       run: |
-        pyinstaller --onefile --name Spotifree-Linux \
-          --add-data "dist:dist" \
-          --hidden-import=flask \
-          --hidden-import=flask_cors \
-          --collect-all flask \
-          backend/app.py
+        npm run ci-build
     
     - name: Make executable
       run: chmod +x dist/Spotifree-Linux
-    
-    # - name: Upload Linux executable
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: spotifree-linux
-    #     path: dist/Spotifree-Linux
-    #     retention-days: 30
-    
-    # - name: Release Linux executable
-    #   if: github.event_name == 'release'
-    #   uses: actions/upload-release-asset@v1
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   with:
-    #     upload_url: ${{ github.event.release.upload_url }}
-    #     asset_path: ./dist/Spotifree-Linux
-    #     asset_name: Spotifree-Linux
-    #     asset_content_type: application/octet-stream
