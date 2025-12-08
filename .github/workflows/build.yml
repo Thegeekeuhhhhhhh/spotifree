@@ -33,10 +33,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
+        
+    - name: Install Node.js dependencies
+      run: npm install
     
     - name: Build Windows executable
-      run: |
-        npm run ci-build
+      run: npm run ci-build
 
   build-linux:
     name: Build Linux Executable
@@ -62,10 +64,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
+        
+    - name: Install Node.js dependencies
+      run: npm install
     
     - name: Build Linux executable
-      run: |
-        npm run ci-build
+      run: npm run ci-build
     
     - name: Make executable
       run: chmod +x dist/Spotifree-Linux
