@@ -16,16 +16,16 @@
     "electron:dev": "npm run build && python -m PyInstaller --onefile .\\backend\\app.py --distpath .\\backend\\ && npm start",
     "electron:build": "npm run build && python -m PyInstaller --onefile .\\backend\\app.py --distpath .\\backend\\ && electron-builder",
     "start": "electron .",
-    "dist": "electron-builder",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist -r https://github.com/Thegeekeuhhhhhhh/spotifree.git"
   },
   "build": {
     "appId": "com.spotifree.desktop",
     "productName": "Spotifree",
-    "asar": true,
+    "asar": false,
     "files": [
       "main.js",
+      "consts.jsx",
       "dist/index.html",
       "dist/assets/*",
       "backend/*"
@@ -50,19 +50,23 @@
         "deb"
       ],
       "icon": "icon.png"
-    }
+    },
+    "extraResources": "back_scripts"
   },
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-beta.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.5",
+    "asar": "^3.2.0",
     "express": "^5.1.0",
     "gh-pages": "^6.3.0",
     "lucide-react": "^0.546.0",
+    "python-shell": "^5.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-draggable": "^4.5.0"
+    "react-draggable": "^4.5.0",
+    "vite-plugin-node-polyfills": "^0.24.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",

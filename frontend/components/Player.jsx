@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { formatTime } from "../utils/helpers";
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Heart, Shuffle, Repeat, Music, Search, Ellipsis } from 'lucide-react';
+import { consts } from "../../consts";
 
 const Player = ({ setIsPlaying, isPlaying, setProgress, progress, setOldVolume, oldVolume, setVolume, volume, setIsMuted, isMuted, setRepeatMode, repeatMode, currentTrackObj, toggleLike,
                 likedTracks, setIsShuffle, isShuffle, handlePrevious, handleNext, duration }) => {
@@ -65,7 +66,7 @@ return (
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
             
             {currentTrackObj?.id && (
-                <audio ref={audioRef} src={`../data/videos/${currentTrackObj.name}`} autoPlay />
+                <audio ref={audioRef} src={`${consts.pathToVideos}/${currentTrackObj.name}`} autoPlay />
             )}
             <div style={currentTrackObj?.miniature ? {
             width: '48px',

@@ -13,7 +13,6 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Snackbar from '@mui/material/Snackbar';
 
-
 function App() {
   const [currentPath, setCurrentPath] = useState('/');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -43,10 +42,6 @@ function App() {
   
   const [errorMessage, setErrorMessage] = useState("");
   const [isErrorMessage, setIsErrorMessage] = useState(false);
-
-
-
-
 
   // const filteredTracks = tracks?.filter(track => 
   //   track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -182,7 +177,7 @@ function App() {
       nextTrack = Math.floor(Math.random() * trackList.length);
     } else {
       for (let i = 0; i < trackList?.length; i++) {
-        if (trackList[i].id == currentTrackObj.id) {
+        if (trackList[i].id == currentTrackObj?.id) {
           if (i == trackList.length - 1) {
             nextTrack = trackList[0].id;
           } else {

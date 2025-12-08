@@ -153,7 +153,6 @@ const TrackItem = ({ track, isPlaying, playTrack, toggleLike, likedTracks, volum
                   setTracks(prevTracks);
                   setTrackList(prevTracks);
                   setLikedTracks(prev => [...prev, result2.id]);
-                  setIsPlaying(true);
                 });
               } else {
                 result1.text().then(result2 => {
