@@ -55,7 +55,7 @@ async def update_metadata_list(json_path, new_data):
     # Save updated metadata
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-    
+
     return new_data
 
 @app.route('/playlist/list', methods=['GET'])
@@ -295,8 +295,8 @@ async def fetch_video(url):
         await update_metadata_list('./data/metadata.json', metadata)
 
         return jsonify(metadata), 200
-    except:
-        return jsonify({ "error": "A problem occured while fetching the video" }), 400
+    except Exception as e:
+        return jsonify({ "error": "A problem occured while fetching the video " + str(e) }), 400
 
 # Route to fetch video, download it and add it to a given playlist
 @app.route('/fetch_dl/video/<url>', methods=['POST'])
@@ -304,7 +304,7 @@ async def fetch_dl_video(url):
     playlist_id = int(request.json.get('playlist_id', -1))
     if (playlist_id == -1):
         return "The given playlist ID seems to be null", 404
-    
+
     data = []
     if os.path.exists('./data/playlists.json'):
         with open('./data/playlists.json', 'r', encoding='utf-8') as f:
@@ -324,7 +324,7 @@ async def fetch_dl_video(url):
             data.append(temp)
             json.dump([temp], f, ensure_ascii=False, indent=4)
 
-    
+
     video_url = f"https://www.youtube.com/watch?v={url}"
     video = YouTube(video_url)
 
@@ -353,7 +353,7 @@ async def fetch_dl_video(url):
         await download_audio(video_url, "./data/videos", f"{name}.m4a")
 
         # Update metadata asynchronously
-        new_data = await update_metadata_list('./data/metadata.json', metadata)    
+        new_data = await update_metadata_list('./data/metadata.json', metadata)
 
         for elt in data:
             if elt["id"] == playlist_id:
@@ -447,5 +447,17 @@ def search_video(req):
 
 # Run the app
 if __name__ == "__main__":
+    print("Running server on 4444")
     # DEBUG: app.run(debug=True, port=4444)
-    app.run(port=4444)
+    from waitress import serve
+    serve(app, host="localhost", port=4444)
+    # app.run(port=4444)
+
+
+
+
+
+
+
+
+
