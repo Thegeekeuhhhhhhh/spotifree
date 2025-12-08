@@ -48,8 +48,19 @@ jobs:
         name: spotifree-executable
         path: "./release/Spotifree Setup 1.0.0.exe"
 
-    - name: ls
-      run: dir ./release
-
-    - name: tree
-      run: tree ./release
+  release:
+    name: Create GitHub Release
+    runs-on: windows-latest
+    needs: build-windows
+    if: github.event_name == 'release' && github.event.action == 'created'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Upload Windows Executable to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "./release/Spotifree Setup 1.0.0.exe"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
