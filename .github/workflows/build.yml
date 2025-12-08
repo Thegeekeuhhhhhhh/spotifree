@@ -37,7 +37,7 @@ jobs:
     - name: Install and build frontend
       run: |
         npm ci
-        npm run electron:build
+        npm run ci-build
     
     - name: Build Windows executable
       run: |
@@ -94,7 +94,7 @@ jobs:
     - name: Install and build frontend
       run: |
         npm ci
-        npm run electron:build
+        npm run ci-build
     
     - name: Build Linux executable
       run: |
