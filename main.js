@@ -118,7 +118,7 @@ function createWindow() {
       contextIsolation: true,
     }
   });
-  win.webContents.openDevTools();
+  // win.webContents.openDevTools();
   win.loadFile(path.join(__dirname, 'dist', 'index.html'));
 }
 

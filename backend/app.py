@@ -1,5 +1,3 @@
-# pip install pytubefix
-
 from pytubefix import YouTube, Search
 import asyncio
 from flask import Flask, jsonify, request
@@ -445,5 +443,5 @@ def search_video(req):
 # Run the app
 if __name__ == "__main__":
     print("Running server on 4444")
-    app.run(debug=True, port=4444)
-    #app.run(port=4444)
+    #app.run(debug=True, port=4444)
+    app.run(port=4444)
