@@ -1,8 +1,5 @@
 # pip install pytubefix
 
-# current : G:\programmin\Projects\spotifree\release\win-unpacked
-path_to_videos = "./resources/app/data/videos"
-
 from pytubefix import YouTube, Search
 import asyncio
 from flask import Flask, jsonify, request
